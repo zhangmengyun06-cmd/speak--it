@@ -12,7 +12,7 @@ pick my son up from school = 去学校接儿子
 be ourselves around each other = 在彼此面前做自己"></textarea><button class="primary" style="margin-top:12px" onclick="addBatch()">批量加入</button></div></div></section>
 <section id="library" class="page"><div class="header"><h1>词书</h1><p>待学习、学习中、已掌握。</p></div><div class="section"><div class="tabs"><button class="chip active" onclick="setFilter('pending',this)">待学习</button><button class="chip" onclick="setFilter('learning',this)">学习中</button><button class="chip" onclick="setFilter('mastered',this)">已掌握</button></div><div id="libraryList"></div></div></section>
 <section id="me" class="page"><div class="header"><h1>我的</h1><p>只看真正有用的数据。</p></div><div class="section"><div class="card"><div class="grid"><div class="stat"><b id="mPending">0</b><span>待学习</span></div><div class="stat"><b id="mLearning">0</b><span>学习中</span></div><div class="stat"><b id="mMastered">0</b><span>已掌握</span></div></div></div></div></section>
-<section id="learn" class="page"><div class="header"><h1>学习</h1><p id="progressText">1 / 5</p></div><div class="section"><div class="learn-card"><div id="studyView"><div class="step">STEP 1 · 中英文一起看</div><div class="learn-en" id="learnEn"></div><div class="learn-cn" id="learnCn"></div><button class="listen" onclick="speakCurrent()">🔊</button><div class="hint">听标准英文发音，然后自己跟读一遍。</div><button class="primary" style="margin-top:22px" onclick="goExam()">我读过了，开始口语考试</button></div><div id="examView" style="display:none"><div class="step">STEP 2 · 只看中文，说出英文</div><div class="answer-cn" id="examCn"></div><button class="mic" onclick="startRecognition()">🎤</button><div class="hint" id="speechStatus">先自己说英文；点麦克风可把声音转成文字，作为参考。</div><div id="heardBox" class="heard" style="display:none"><div class="small">识别到</div><div id="heardText" style="font-size:18px;font-weight:700;margin-top:4px"></div></div><div class="row" style="margin-top:18px"><button class="secondary" onclick="markPass()">✅ 我说出来了</button><button class="secondary" onclick="markFail()">❌ 说不出来</button></div><div id="examNotice" class="notice"></div></div></div></div></section>
+<section id="learn" class="page"><div class="header"><h1>学习</h1><p id="progressText">1 / 5</p></div><div class="section"><div class="learn-card"><div id="studyView"><div class="step">STEP 1 · 中英文一起看</div><div class="learn-en" id="learnEn"></div><div class="learn-cn" id="learnCn"></div><button class="listen" onclick="speakCurrent()">🔊</button><div class="hint">进入卡片会自动播放英文；也可以点喇叭再听一次。</div><button class="primary" style="margin-top:22px" onclick="goExam()">我读过了，开始口语考试</button></div><div id="examView" style="display:none"><div class="step">STEP 2 · 只看中文，说出英文</div><div class="answer-cn" id="examCn"></div><button class="mic" onclick="startRecognition()">🎤</button><div class="hint" id="speechStatus">先自己说英文；点麦克风可把声音转成文字，作为参考。</div><div id="heardBox" class="heard" style="display:none"><div class="small">识别到</div><div id="heardText" style="font-size:18px;font-weight:700;margin-top:4px"></div></div><div class="row" style="margin-top:18px"><button class="secondary" onclick="markPass()">✅ 我说出来了</button><button class="secondary" onclick="markFail()">❌ 说不出来</button></div><div id="examNotice" class="notice"></div></div></div></div></section>
 <section id="done" class="page"><div class="header"><h1>完成</h1><p>这一组已经结束。</p></div><div class="done"><div class="check">✓</div><h2>这一组完成了</h2><p>如果还有时间，回到首页再点一次“开始学习”，自动进入下一组。</p><button class="primary" onclick="showPage('today')">回到首页</button></div></section>
 <div class="nav"><button class="active" data-page="today" onclick="showPage('today',this)"><strong>⌂</strong>今日</button><button data-page="add" onclick="showPage('add',this)"><strong>＋</strong>新增</button><button data-page="library" onclick="showPage('library',this)"><strong>☆</strong>词书</button><button data-page="me" onclick="showPage('me',this)"><strong>☺</strong>我的</button></div></div>
 <script>
@@ -161,10 +161,27 @@ function loadItem(){
   $("learnEn").textContent=x.en;$("learnCn").textContent=x.cn;$("examCn").textContent=x.cn;
   $("studyView").style.display="";$("examView").style.display="none";$("examNotice").style.display="none";$("heardBox").style.display="none";
   $("speechStatus").textContent="先自己说英文；点麦克风可把声音转成文字，作为参考。";
+  setTimeout(()=>speakCurrent(),180);
+}
+function getBestEnglishVoice(){
+  const voices=speechSynthesis.getVoices().filter(v=>/^en-US/i.test(v.lang));
+  const preferred=["Samantha","Ava","Zoe","Allison","Susan","Karen","Moira","Joelle","Evan"];
+  for(const name of preferred){
+    const hit=voices.find(v=>v.name.includes(name));
+    if(hit)return hit;
+  }
+  return voices.find(v=>/enhanced|premium|natural/i.test(v.name))||voices[0]||null;
 }
 function speakCurrent(){
   const x=queue[qi];if(!x||!("speechSynthesis"in window))return alert("当前浏览器不支持英文朗读");
-  speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(x.en);u.lang="en-US";u.rate=.9;speechSynthesis.speak(u);
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(x.en);
+  u.lang="en-US";
+  u.rate=.86;
+  u.pitch=1;
+  const voice=getBestEnglishVoice();
+  if(voice)u.voice=voice;
+  speechSynthesis.speak(u);
 }
 function goExam(){$("studyView").style.display="none";$("examView").style.display=""}
 function startRecognition(){
