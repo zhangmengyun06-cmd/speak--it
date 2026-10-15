@@ -16,17 +16,179 @@ be ourselves around each other = 在彼此面前做自己"></textarea><button cl
 <section id="done" class="page"><div class="header"><h1>完成</h1><p>这一组已经结束。</p></div><div class="done"><div class="check">✓</div><h2>这一组完成了</h2><p>如果还有时间，回到首页再点一次“开始学习”，自动进入下一组。</p><button class="primary" onclick="showPage('today')">回到首页</button></div></section>
 <div class="nav"><button class="active" data-page="today" onclick="showPage('today',this)"><strong>⌂</strong>今日</button><button data-page="add" onclick="showPage('add',this)"><strong>＋</strong>新增</button><button data-page="library" onclick="showPage('library',this)"><strong>☆</strong>词书</button><button data-page="me" onclick="showPage('me',this)"><strong>☺</strong>我的</button></div></div>
 <script>
-const REVIEW_DELAYS=[1,3,7,14,21];const demo=[["refund","退款"],["get a refund","获得退款"],["financial ties","经济利益关系"],["pick my son up from school","去学校接儿子"],["be ourselves around each other","在彼此面前做自己"]].map((x,i)=>({id:i+1,en:x[0],cn:x[1],status:"pending",stage:0,reset:0,next_review_at:null}));let state=JSON.parse(localStorage.getItem("speak_it_simple_final")||"null")||{items:demo};let queue=[],qi=0,filter="pending";
-function save(){localStorage.setItem("speak_it_simple_final",JSON.stringify(state));renderAll()}function showPage(id,btn){document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));document.getElementById(id).classList.add("active");document.querySelectorAll(".nav button").forEach(x=>x.classList.remove("active"));const n=btn||document.querySelector(`.nav button[data-page="${id}"]`);if(n)n.classList.add("active");window.scrollTo(0,0)}function isDue(x){return x.status==="learning"&&(!x.next_review_at||new Date(x.next_review_at)<=new Date())}
-function renderAll(){const pending=state.items.filter(x=>x.status==="pending"),learning=state.items.filter(x=>x.status==="learning"),mastered=state.items.filter(x=>x.status==="mastered"),due=state.items.filter(isDue);pendingCount.textContent=pending.length;groupCount.textContent=Math.ceil(pending.length/5);dueCount.textContent=due.length;todayTotal.textContent=due.length+Math.min(5,pending.length);mPending.textContent=pending.length;mLearning.textContent=learning.length;mMastered.textContent=mastered.length;renderNextGroup();renderLibrary()}
-function renderNextGroup(){const p=state.items.filter(x=>x.status==="pending").slice(0,5),box=nextGroup;if(!p.length){box.innerHTML='<div class="empty">暂无待学习内容</div>';return}box.innerHTML=`<div class="group"><div class="group-head"><b>下一组</b><span class="badge">${p.length}个</span></div>`+p.map(x=>`<div class="item"><div class="en">${esc(x.en)}</div><div class="cn">${esc(x.cn)}</div></div>`).join("")+"</div>"}
-function renderLibrary(){const arr=state.items.filter(x=>x.status===filter),box=libraryList;box.innerHTML=arr.length?arr.map(x=>`<div class="group"><div class="en">${esc(x.en)}</div><div class="cn">${esc(x.cn)}</div><div class="small" style="margin-top:6px">${label(x)}</div></div>`).join(""):'<div class="empty">暂无内容</div>'}
-function label(x){if(x.status==="pending")return"待学习";if(x.status==="mastered")return"已掌握";if(x.reset)return`学习中 · 重置 ${x.reset} 次`;return`学习中 · 阶段 ${x.stage}`}function setFilter(f,btn){filter=f;document.querySelectorAll(".chip").forEach(x=>x.classList.remove("active"));btn.classList.add("active");renderLibrary()}
-function addSingle(){const en=enInput.value.trim(),cn=cnInput.value.trim();if(!en||!cn)return alert("英文和中文都要填写");addItem(en,cn);enInput.value="";cnInput.value="";save();showPage("today")}function addBatch(){const lines=batchInput.value.split(/\n+/).map(x=>x.trim()).filter(Boolean);lines.forEach(line=>{const p=line.split(/\s*[=＝]\s*/);if(p.length>=2)addItem(p[0].trim(),p.slice(1).join(" = ").trim())});batchInput.value="";save();showPage("today")}
-function addItem(en,cn){if(state.items.some(x=>x.en.toLowerCase()===en.toLowerCase()))return;state.items.push({id:Date.now()+Math.random(),en,cn,status:"pending",stage:0,reset:0,next_review_at:null})}
-function startSession(){const due=state.items.filter(isDue),pending=state.items.filter(x=>x.status==="pending").slice(0,5);queue=[...due,...pending];if(!queue.length)return alert("今天没有到期复习，也没有待学习内容");qi=0;showPage("learn");loadItem()}function loadItem(){if(qi>=queue.length){save();showPage("done");return}const x=queue[qi];progressText.textContent=`${qi+1} / ${queue.length}`;learnEn.textContent=x.en;learnCn.textContent=x.cn;examCn.textContent=x.cn;studyView.style.display="";examView.style.display="none";examNotice.style.display="none";heardBox.style.display="none";speechStatus.textContent="先自己说英文；点麦克风可把声音转成文字，作为参考。"}
-function speakCurrent(){const x=queue[qi];if(!x||!("speechSynthesis"in window))return alert("当前浏览器不支持英文朗读");speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(x.en);u.lang="en-US";u.rate=.9;speechSynthesis.speak(u)}function goExam(){studyView.style.display="none";examView.style.display=""}
-function startRecognition(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){speechStatus.textContent="当前浏览器不支持网页语音识别。你可以直接自己判断是否说出来。";return}const r=new SR();r.lang="en-US";r.interimResults=false;r.maxAlternatives=1;speechStatus.textContent="正在听……";r.onresult=e=>{const text=e.results[0][0].transcript;heardText.textContent=text;heardBox.style.display="block";speechStatus.textContent="这是转写结果，只作为参考；最终由你自己判断能不能说出来。"};r.onerror=()=>speechStatus.textContent="没有听清，可以再试一次，或直接自己判断。";r.start()}
-function real(){const x=queue[qi];return state.items.find(i=>i.id===x.id)}function markPass(){const x=real();if(x.status==="pending")x.status="learning";if(x.stage>=5){x.stage=6;x.status="mastered";x.next_review_at=null}else{x.stage+=1;const delay=REVIEW_DELAYS[x.stage-1]||1;x.next_review_at=new Date(Date.now()+delay*86400000).toISOString()}qi++;save();loadItem()}
-function markFail(){const x=real();x.status="learning";x.stage=0;x.reset=(x.reset||0)+1;x.next_review_at=null;examNotice.style.display="block";examNotice.innerHTML=`<b>周期已重置</b><div class="small" style="margin-top:6px">只看中文时说不出英文，这个内容重新从学习当天开始。</div><div style="margin-top:10px"><b>${esc(x.en)}</b></div><div class="cn">${esc(x.cn)}</div><button class="secondary" style="margin-top:10px" onclick="speakCurrent()">🔊 再听一次</button><button class="primary" style="margin-top:10px" onclick="restartSame()">重新学习这个内容</button>`;save()}function restartSame(){studyView.style.display="";examView.style.display="none";examNotice.style.display="none"}function esc(s){return String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}if("serviceWorker"in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}))}renderAll()
+const REVIEW_DELAYS=[1,3,7,14,21];
+const SEED_PAIRS=[
+["art exhibition","艺术展览"],
+["plastic","塑料的"],
+["paddleboarding","划桨板"],
+["go toward","抵扣、用于支付"],
+["get a refund","退款 / 退票"],
+["be on my period","来月经"],
+["period cramps / have cramps","痛经 / 肚子疼"],
+["pick my son up from school","接儿子放学"],
+["divide the writing into paragraphs","给作文分段"],
+["main idea","中心思想"],
+["sign him up for a test","给他报名考试"],
+["What I enjoyed most was…","我最享受的是……"],
+["There are no financial ties between us.","我们之间没有金钱关系"],
+["our views on life and money","我们对生活和金钱的看法"],
+["The sunlight was sparkling on the lake.","阳光在湖面上闪闪发光"],
+["take a day off","请假 / 休息一天"],
+["practice paper / test paper","练习卷 / 试卷"],
+["half asleep","还没完全睡醒、迷迷糊糊"],
+["video editor","视频剪辑师"],
+["script","口播稿 / 脚本"],
+["client","客户"],
+["society","社会"],
+["athletic career / sports career","运动生涯"],
+["long-term effects","后遗症 / 长期影响"],
+["strong and capable women","厉害、有能力的女性"],
+["independent","独立的"],
+["order takeout","点外卖"],
+["massage therapist","按摩师"],
+["sore","酸痛的"],
+["stiff","僵硬的"],
+["ease the pain / relieve the pain","缓解疼痛"],
+["do some stretching","做一些拉伸"],
+["stretch my muscles","拉伸肌肉"],
+["productive","充实的 / 有效率的"],
+["get along well","相处得好"],
+["get along with someone","和某人相处"],
+["short drama","短剧"],
+["arrange a car","安排用车"],
+["make an appointment","预约"],
+["get stuck in traffic","堵车"],
+["feel carsick","晕车"],
+["get my nails fixed","修美甲"],
+["hair accessories","头饰"],
+["get addicted to","沉迷于……"],
+["Take Action Now","马上行动"],
+["push me to be more active","督促我变得更积极"]
+];
+
+const $=id=>document.getElementById(id);
+function makeItem(en,cn){return {id:Date.now()+Math.random(),en,cn,status:"pending",stage:0,reset:0,next_review_at:null}}
+let state;
+try{state=JSON.parse(localStorage.getItem("speak_it_simple_final")||"null")}catch(e){state=null}
+if(!state||!Array.isArray(state.items)) state={items:[]};
+
+// Add the supplied vocabulary once, without destroying any existing progress.
+for(const [en,cn] of SEED_PAIRS){
+  if(!state.items.some(x=>String(x.en||"").trim().toLowerCase()===en.toLowerCase())){
+    state.items.push(makeItem(en,cn));
+  }
+}
+localStorage.setItem("speak_it_simple_final",JSON.stringify(state));
+
+let queue=[],qi=0,filter="pending";
+function save(){localStorage.setItem("speak_it_simple_final",JSON.stringify(state));renderAll()}
+function showPage(id,btn){
+  document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));
+  $(id).classList.add("active");
+  document.querySelectorAll(".nav button").forEach(x=>x.classList.remove("active"));
+  const n=btn||document.querySelector('.nav button[data-page="'+id+'"]');
+  if(n)n.classList.add("active");
+  window.scrollTo(0,0);
+}
+function isDue(x){return x.status==="learning"&&(!x.next_review_at||new Date(x.next_review_at)<=new Date())}
+function renderAll(){
+  const pending=state.items.filter(x=>x.status==="pending");
+  const learning=state.items.filter(x=>x.status==="learning");
+  const mastered=state.items.filter(x=>x.status==="mastered");
+  const due=state.items.filter(isDue);
+  $("pendingCount").textContent=pending.length;
+  $("groupCount").textContent=Math.ceil(pending.length/5);
+  $("dueCount").textContent=due.length;
+  $("todayTotal").textContent=due.length+Math.min(5,pending.length);
+  $("mPending").textContent=pending.length;
+  $("mLearning").textContent=learning.length;
+  $("mMastered").textContent=mastered.length;
+  renderNextGroup();renderLibrary();
+}
+function renderNextGroup(){
+  const p=state.items.filter(x=>x.status==="pending").slice(0,5),box=$("nextGroup");
+  if(!p.length){box.innerHTML='<div class="empty">暂无待学习内容</div>';return}
+  box.innerHTML='<div class="group"><div class="group-head"><b>下一组</b><span class="badge">'+p.length+'个</span></div>'+
+    p.map(x=>'<div class="item"><div class="en">'+esc(x.en)+'</div><div class="cn">'+esc(x.cn)+'</div></div>').join("")+'</div>';
+}
+function renderLibrary(){
+  const arr=state.items.filter(x=>x.status===filter),box=$("libraryList");
+  box.innerHTML=arr.length?arr.map(x=>'<div class="group"><div class="en">'+esc(x.en)+'</div><div class="cn">'+esc(x.cn)+'</div><div class="small" style="margin-top:6px">'+label(x)+'</div></div>').join(""):'<div class="empty">暂无内容</div>';
+}
+function label(x){
+  if(x.status==="pending")return"待学习";
+  if(x.status==="mastered")return"已掌握";
+  if(x.reset)return"学习中 · 重置 "+x.reset+" 次";
+  return"学习中 · 阶段 "+x.stage;
+}
+function setFilter(f,btn){filter=f;document.querySelectorAll(".chip").forEach(x=>x.classList.remove("active"));btn.classList.add("active");renderLibrary()}
+function addSingle(){
+  const en=$("enInput").value.trim(),cn=$("cnInput").value.trim();
+  if(!en||!cn)return alert("英文和中文都要填写");
+  const added=addItem(en,cn);
+  if(!added)return alert("这个英文已经在词书里了");
+  $("enInput").value="";$("cnInput").value="";
+  save();showPage("today");
+}
+function addBatch(){
+  const lines=$("batchInput").value.split(/\n+/).map(x=>x.trim()).filter(Boolean);
+  let added=0,skipped=0;
+  for(const line of lines){
+    const p=line.split(/\s*(?:=|＝|—|–)\s*/);
+    if(p.length>=2&&p[0].trim()&&p.slice(1).join(" — ").trim()){
+      if(addItem(p[0].trim(),p.slice(1).join(" — ").trim()))added++;else skipped++;
+    }
+  }
+  if(!added)return alert("没有识别到可新增内容。格式示例：refund = 退款");
+  $("batchInput").value="";
+  save();showPage("today");
+  setTimeout(()=>alert("已新增 "+added+" 条"+(skipped?"，跳过重复 "+skipped+" 条":"")),80);
+}
+function addItem(en,cn){
+  if(state.items.some(x=>String(x.en||"").trim().toLowerCase()===en.toLowerCase()))return false;
+  state.items.push(makeItem(en,cn));return true;
+}
+function startSession(){
+  const due=state.items.filter(isDue),pending=state.items.filter(x=>x.status==="pending").slice(0,5);
+  queue=[...due,...pending];
+  if(!queue.length)return alert("今天没有到期复习，也没有待学习内容");
+  qi=0;showPage("learn");loadItem();
+}
+function loadItem(){
+  if(qi>=queue.length){save();showPage("done");return}
+  const x=queue[qi];
+  $("progressText").textContent=(qi+1)+" / "+queue.length;
+  $("learnEn").textContent=x.en;$("learnCn").textContent=x.cn;$("examCn").textContent=x.cn;
+  $("studyView").style.display="";$("examView").style.display="none";$("examNotice").style.display="none";$("heardBox").style.display="none";
+  $("speechStatus").textContent="先自己说英文；点麦克风可把声音转成文字，作为参考。";
+}
+function speakCurrent(){
+  const x=queue[qi];if(!x||!("speechSynthesis"in window))return alert("当前浏览器不支持英文朗读");
+  speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(x.en);u.lang="en-US";u.rate=.9;speechSynthesis.speak(u);
+}
+function goExam(){$("studyView").style.display="none";$("examView").style.display=""}
+function startRecognition(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){$("speechStatus").textContent="当前浏览器不支持网页语音识别。你可以直接自己判断是否说出来。";return}
+  const r=new SR();r.lang="en-US";r.interimResults=false;r.maxAlternatives=1;$("speechStatus").textContent="正在听……";
+  r.onresult=e=>{const t=e.results[0][0].transcript;$("heardText").textContent=t;$("heardBox").style.display="block";$("speechStatus").textContent="这是转写结果，只作为参考；最终由你自己判断能不能说出来。"};
+  r.onerror=()=>{$("speechStatus").textContent="没有听清，可以再试一次，或直接自己判断。"};r.start();
+}
+function real(){const x=queue[qi];return state.items.find(i=>i.id===x.id)}
+function markPass(){
+  const x=real();if(x.status==="pending")x.status="learning";
+  if(x.stage>=5){x.stage=6;x.status="mastered";x.next_review_at=null}
+  else{x.stage+=1;const delay=REVIEW_DELAYS[x.stage-1]||1;x.next_review_at=new Date(Date.now()+delay*86400000).toISOString()}
+  qi++;save();loadItem();
+}
+function markFail(){
+  const x=real();x.status="learning";x.stage=0;x.reset=(x.reset||0)+1;x.next_review_at=null;
+  const n=$("examNotice");n.style.display="block";
+  n.innerHTML='<b>周期已重置</b><div class="small" style="margin-top:6px">只看中文时说不出英文，这个内容重新从学习当天开始。</div><div style="margin-top:10px"><b>'+esc(x.en)+'</b></div><div class="cn">'+esc(x.cn)+'</div><button class="secondary" style="margin-top:10px" onclick="speakCurrent()">🔊 再听一次</button><button class="primary" style="margin-top:10px" onclick="restartSame()">重新学习这个内容</button>';
+  save();
+}
+function restartSame(){$("studyView").style.display="";$("examView").style.display="none";$("examNotice").style.display="none"}
+function esc(s){return String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+if("serviceWorker"in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}))}
+renderAll();
 </script></body></html>
