@@ -261,6 +261,15 @@ function revealAnswer(){
   $("revealHint").style.display="none";
 }
 $("examCn").addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();revealAnswer()}});
+function revealAnswer(){
+  $("answerReveal").style.display="block";
+  $("judgeButtons").style.display="flex";
+  $("revealHint").style.display="none";
+}
+function speakCorrectAnswer(){
+  const x=examQueue[examIndex];
+  if(x)speakText(x.en);
+}
 function getBestEnglishVoice(){
   const voices=speechSynthesis.getVoices().filter(v=>/^en-US/i.test(v.lang));
   const preferred=["Samantha","Ava","Zoe","Allison","Susan","Karen","Moira","Joelle","Evan"];
