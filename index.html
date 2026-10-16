@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="zh-CN">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#FAF8F4"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Speak It"><link rel="manifest" href="manifest.json"><title>Speak It</title>
-<style>:root{--bg:#FAF8F4;--card:#fff;--text:#181818;--muted:#969696;--line:#ECE8E1;--yellow:#FFF1B8}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}body{margin:0;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",Arial,sans-serif;color:var(--text)}.app{max-width:480px;margin:auto;min-height:100vh;padding-bottom:92px}.page{display:none}.page.active{display:block}.header{padding:28px 18px 10px}.header h1{margin:0;font-size:30px}.header p{margin:6px 0 0;color:var(--muted);font-size:14px}.section{padding:10px 16px}.card{background:#fff;border:1px solid var(--line);border-radius:24px;padding:18px}.small{font-size:13px;color:var(--muted)}.big{font-size:36px;font-weight:800}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}.stat{background:#FFFDF9;border:1px solid var(--line);border-radius:18px;padding:13px 8px;text-align:center}.stat b{font-size:22px}.stat span{display:block;font-size:12px;color:var(--muted);margin-top:4px}button,textarea,input{font:inherit}.primary,.secondary{width:100%;border-radius:18px;padding:15px;font-weight:700}.primary{border:none;background:#1B1B1B;color:#fff}.secondary{background:#fff;border:1px solid var(--line);color:var(--text)}.row{display:flex;gap:10px}.row>*{flex:1}textarea,input{width:100%;border:1px solid var(--line);background:#fff;border-radius:18px;padding:14px;outline:none}.group{background:#fff;border:1px solid var(--line);border-radius:20px;padding:15px;margin-bottom:10px}.group-head{display:flex;justify-content:space-between;align-items:center}.badge{font-size:12px;border-radius:999px;padding:6px 9px;background:var(--yellow)}.item{padding:10px 0;border-top:1px solid #F3F0EB}.en{font-size:17px;font-weight:700}.cn{font-size:13px;color:var(--muted);margin-top:4px}.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(480px,100%);display:grid;grid-template-columns:repeat(4,1fr);background:rgba(255,255,255,.96);backdrop-filter:blur(16px);border-top:1px solid var(--line);padding:8px 4px calc(8px + env(safe-area-inset-bottom));z-index:20}.nav button{border:none;background:none;color:var(--muted);padding:7px 0;font-size:12px}.nav button.active{color:#111}.nav strong{display:block;font-size:20px}.learn-card{min-height:66vh;display:flex;flex-direction:column;justify-content:center;text-align:center;background:#fff;border:1px solid var(--line);border-radius:28px;padding:24px}.step{font-size:12px;color:var(--muted);letter-spacing:.08em;margin-bottom:24px}.learn-en{font-size:34px;font-weight:800;line-height:1.3}.learn-cn{font-size:16px;color:var(--muted);margin-top:10px}.listen{margin:28px auto 10px;width:74px;height:74px;border:none;border-radius:50%;background:var(--yellow);font-size:29px}.mic{margin:18px auto 8px;width:88px;height:88px;border:none;border-radius:50%;background:#1B1B1B;color:#fff;font-size:31px}.answer-cn{font-size:29px;font-weight:800;line-height:1.4;margin:24px 0}.hint{font-size:13px;color:var(--muted);line-height:1.6}.notice{display:none;margin-top:16px;padding:14px;border-radius:16px;background:#FFF8E2;text-align:left}.heard{margin-top:12px;padding:12px;border-radius:14px;background:#F7F7F5;text-align:left}.tabs{display:flex;gap:8px;overflow:auto;margin-bottom:12px}.chip{white-space:nowrap;border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 12px;color:var(--muted)}.chip.active{background:#1B1B1B;color:#fff}.empty{text-align:center;color:var(--muted);padding:36px 10px}.done{text-align:center;padding:36px 18px}.done .check{font-size:58px}.done h2{font-size:28px;margin:8px 0}.done p{color:var(--muted);line-height:1.7}</style></head>
+<style>:root{--bg:#FAF8F4;--card:#fff;--text:#181818;--muted:#969696;--line:#ECE8E1;--yellow:#FFF1B8}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}body{margin:0;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",Arial,sans-serif;color:var(--text)}.app{max-width:480px;margin:auto;min-height:100vh;padding-bottom:92px}.page{display:none}.page.active{display:block}.header{padding:28px 18px 10px}.header h1{margin:0;font-size:30px}.header p{margin:6px 0 0;color:var(--muted);font-size:14px}.section{padding:10px 16px}.card{background:#fff;border:1px solid var(--line);border-radius:24px;padding:18px}.small{font-size:13px;color:var(--muted)}.big{font-size:36px;font-weight:800}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}.stat{background:#FFFDF9;border:1px solid var(--line);border-radius:18px;padding:13px 8px;text-align:center}.stat b{font-size:22px}.stat span{display:block;font-size:12px;color:var(--muted);margin-top:4px}button,textarea,input{font:inherit}.primary,.secondary{width:100%;border-radius:18px;padding:15px;font-weight:700}.primary{border:none;background:#1B1B1B;color:#fff}.secondary{background:#fff;border:1px solid var(--line);color:var(--text)}.row{display:flex;gap:10px}.row>*{flex:1}textarea,input{width:100%;border:1px solid var(--line);background:#fff;border-radius:18px;padding:14px;outline:none}.group{background:#fff;border:1px solid var(--line);border-radius:20px;padding:15px;margin-bottom:10px}.group-head{display:flex;justify-content:space-between;align-items:center}.badge{font-size:12px;border-radius:999px;padding:6px 9px;background:var(--yellow)}.item{padding:10px 0;border-top:1px solid #F3F0EB}.en{font-size:17px;font-weight:700}.cn{font-size:13px;color:var(--muted);margin-top:4px}.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(480px,100%);display:grid;grid-template-columns:repeat(4,1fr);background:rgba(255,255,255,.96);backdrop-filter:blur(16px);border-top:1px solid var(--line);padding:8px 4px calc(8px + env(safe-area-inset-bottom));z-index:20}.nav button{border:none;background:none;color:var(--muted);padding:7px 0;font-size:12px}.nav button.active{color:#111}.nav strong{display:block;font-size:20px}.learn-card{min-height:66vh;display:flex;flex-direction:column;justify-content:center;text-align:center;background:#fff;border:1px solid var(--line);border-radius:28px;padding:24px}.step{font-size:12px;color:var(--muted);letter-spacing:.08em;margin-bottom:24px}.learn-en{font-size:34px;font-weight:800;line-height:1.3}.learn-cn{font-size:16px;color:var(--muted);margin-top:10px}.listen{margin:28px auto 10px;width:74px;height:74px;border:none;border-radius:50%;background:var(--yellow);font-size:29px}.mic{margin:18px auto 8px;width:88px;height:88px;border:none;border-radius:50%;background:#1B1B1B;color:#fff;font-size:31px}.answer-cn{font-size:29px;font-weight:800;line-height:1.4;margin:24px 0;cursor:pointer}.answer-reveal{display:none;margin:14px 0 4px;padding:16px;border-radius:18px;background:#FFF8E2}.answer-reveal .correct-en{font-size:24px;font-weight:800;line-height:1.35}.answer-reveal .tap-note{font-size:12px;color:var(--muted);margin-top:6px}.hint{font-size:13px;color:var(--muted);line-height:1.6}.notice{display:none;margin-top:16px;padding:14px;border-radius:16px;background:#FFF8E2;text-align:left}.heard{margin-top:12px;padding:12px;border-radius:14px;background:#F7F7F5;text-align:left}.tabs{display:flex;gap:8px;overflow:auto;margin-bottom:12px}.chip{white-space:nowrap;border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 12px;color:var(--muted)}.chip.active{background:#1B1B1B;color:#fff}.empty{text-align:center;color:var(--muted);padding:36px 10px}.done{text-align:center;padding:36px 18px}.done .check{font-size:58px}.done h2{font-size:28px;margin:8px 0}.done p{color:var(--muted);line-height:1.7}</style></head>
 <body><div class="app">
 <section id="today" class="page active"><div class="header"><h1>Speak It</h1><p>想得到，说得出。</p></div><div class="section"><div class="card"><div class="small">今天</div><div class="big" id="todayTotal">0</div><div class="grid"><div class="stat"><b id="dueCount">0</b><span>到期复习</span></div><div class="stat"><b id="pendingCount">0</b><span>待学习</span></div><div class="stat"><b id="groupCount">0</b><span>待学习组</span></div></div><button id="startBtn" class="primary" style="margin-top:16px" onclick="startSession()">开始学习</button>
 <button id="yesterdayExamBtn" class="secondary" style="margin-top:10px;display:none;background:#FFF1B8" onclick="startYesterdayExam()">先完成昨日词汇考试</button>
@@ -26,11 +26,18 @@ be ourselves around each other = 在彼此面前做自己"></textarea><button cl
 </div>
 <div id="examView" style="display:none">
   <div class="step" id="examStep">STEP 2 · 打乱考试，只看中文</div>
-  <div class="answer-cn" id="examCn"></div>
+  <div class="answer-cn" id="examCn" onclick="revealAnswer()" role="button" tabindex="0" aria-label="点击查看正确英文"></div>
+  <div class="hint" id="revealHint">先自己说英文，然后点一下上面的中文查看正确答案。</div>
+  <div id="answerReveal" class="answer-reveal">
+    <div class="small">正确英文</div>
+    <div class="correct-en" id="correctEn"></div>
+    <button class="secondary" style="margin-top:12px" onclick="speakText(document.getElementById('correctEn').textContent)">🔊 听正确发音</button>
+    <div class="tap-note">对照你刚才说的，再判断自己是否答对。</div>
+  </div>
   <button class="mic" onclick="startRecognition()">🎤</button>
-  <div class="hint" id="speechStatus">先自己说英文；点麦克风可把声音转成文字，作为参考。</div>
+  <div class="hint" id="speechStatus">也可以点麦克风，把你刚才说的英文转成文字作参考。</div>
   <div id="heardBox" class="heard" style="display:none"><div class="small">识别到</div><div id="heardText" style="font-size:18px;font-weight:700;margin-top:4px"></div></div>
-  <div class="row" style="margin-top:18px"><button class="secondary" onclick="markPass()">✅ 我说出来了</button><button class="secondary" onclick="markFail()">❌ 说不出来</button></div>
+  <div id="judgeButtons" class="row" style="margin-top:18px;display:none"><button class="secondary" onclick="markPass()">✅ 我说对了</button><button class="secondary" onclick="markFail()">❌ 我没说对</button></div>
   <div id="examNotice" class="notice"></div>
 </div>
 </div></div></section>
@@ -241,10 +248,19 @@ function loadExamItem(){
   $("progressText").textContent=(examIndex+1)+" / "+examQueue.length;
   $("examStep").textContent=examMode==="daily"?"FINAL · 今日内容随机打乱":examMode==="yesterday"?"DAY 2 · 先考昨天，只看中文":"STEP 2 · 本组随机打乱，只看中文";
   $("examCn").textContent=x.cn;
+  $("correctEn").textContent=x.en;
   $("studyView").style.display="none";$("examView").style.display="";
   $("examNotice").style.display="none";$("heardBox").style.display="none";
-  $("speechStatus").textContent="只看中文，先自己说英文；麦克风转文字只作参考。";
+  $("answerReveal").style.display="none";$("judgeButtons").style.display="none";
+  $("revealHint").style.display="block";
+  $("speechStatus").textContent="也可以点麦克风，把你刚才说的英文转成文字作参考。";
 }
+function revealAnswer(){
+  $("answerReveal").style.display="block";
+  $("judgeButtons").style.display="flex";
+  $("revealHint").style.display="none";
+}
+$("examCn").addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();revealAnswer()}});
 function getBestEnglishVoice(){
   const voices=speechSynthesis.getVoices().filter(v=>/^en-US/i.test(v.lang));
   const preferred=["Samantha","Ava","Zoe","Allison","Susan","Karen","Moira","Joelle","Evan"];
@@ -277,11 +293,13 @@ function resetCycle(x){
   x.status="learning";x.stage=0;x.reset=(x.reset||0)+1;x.next_review_at=null;
 }
 function markPass(){
+  if($("answerReveal").style.display==="none")return revealAnswer();
   const x=currentExamReal();
   if(examMode==="group"||examMode==="yesterday")advanceCycle(x);
   examIndex++;save();loadExamItem();
 }
 function markFail(){
+  if($("answerReveal").style.display==="none")return revealAnswer();
   const x=currentExamReal();resetCycle(x);
   if(examMode==="yesterday")failedRound.push(x);
   const n=$("examNotice");n.style.display="block";
