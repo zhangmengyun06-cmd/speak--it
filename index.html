@@ -6,7 +6,8 @@
 <section id="today" class="page active"><div class="header"><h1>Speak It</h1><p>想得到，说得出。</p></div><div class="section"><div class="card"><div class="small">今天</div><div class="big" id="todayTotal">0</div><div class="grid"><div class="stat"><b id="dueCount">0</b><span>到期复习</span></div><div class="stat"><b id="pendingCount">0</b><span>待学习</span></div><div class="stat"><b id="groupCount">0</b><span>待学习组</span></div></div><button id="startBtn" class="primary" style="margin-top:16px" onclick="startSession()">开始学习</button>
 <button id="yesterdayExamBtn" class="secondary" style="margin-top:10px;display:none;background:#FFF1B8" onclick="startYesterdayExam()">先完成昨日词汇考试</button>
 <button id="dailyExamBtn" class="secondary" style="margin-top:10px;display:none" onclick="startDailyExam()">今日总考试</button>
-<div class="small" style="text-align:center;margin-top:9px">先学完一组，再打乱考试；今天学过的内容还可以做一次总考试。</div></div></div><div class="section"><div class="row"><button class="secondary" onclick="showPage('add')">＋ 新增内容</button><button class="secondary" onclick="showPage('batch')">批量新增</button></div></div><div class="section"><div style="font-size:15px;font-weight:700;margin:3px 3px 9px">下一组</div><div id="nextGroup"></div></div></section>
+<div id="resumeBox" class="small" style="display:none;text-align:center;margin-top:10px;padding:10px;border-radius:12px;background:#FFF8E2">检测到未完成的学习进度。<button class="secondary" style="margin-top:8px;padding:9px" onclick="resumeSession()">继续刚才那一组</button></div>
+<div class="small" style="text-align:center;margin-top:9px">先学完一组，再打乱考试；熟悉的词可点“熟”跳过后续重复，但仍会进入考试。</div></div></div><div class="section"><div class="row"><button class="secondary" onclick="showPage('add')">＋ 新增内容</button><button class="secondary" onclick="showPage('batch')">批量新增</button></div></div><div class="section"><div style="font-size:15px;font-weight:700;margin:3px 3px 9px">下一组</div><div id="nextGroup"></div></div></section>
 <section id="add" class="page"><div class="header"><h1>新增</h1><p>自己输入英文和中文。</p></div><div class="section"><div class="card"><input id="enInput" placeholder="英文，例如：refund"><input id="cnInput" style="margin-top:10px" placeholder="中文，例如：退款"><button class="primary" style="margin-top:12px" onclick="addSingle()">加入待学习词书</button></div></div></section>
 <section id="batch" class="page"><div class="header"><h1>批量新增</h1><p>每行一条：英文 = 中文</p></div><div class="section"><div class="card"><textarea id="batchInput" rows="12" placeholder="refund = 退款
 get a refund = 获得退款
@@ -22,7 +23,7 @@ be ourselves around each other = 在彼此面前做自己"></textarea><button cl
   <div class="learn-cn" id="learnCn"></div>
   <button class="listen" onclick="speakCurrent()">🔊</button>
   <div class="hint">这一组会循环学习 5 遍。每次进入卡片自动播放英文，你跟读后再进入下一个。</div>
-  <button class="primary" style="margin-top:22px" onclick="nextStudyItem()">下一个</button>
+  <div class="row" style="margin-top:22px"><button class="primary" onclick="nextStudyItem()">下一个</button><button class="secondary" onclick="markFamiliar()">熟 · 跳过后续学习</button></div>
 </div>
 <div id="examView" style="display:none">
   <div class="step" id="examStep">STEP 2 · 打乱考试，只看中文</div>
@@ -108,7 +109,59 @@ for(const [en,cn] of SEED_PAIRS){
 }
 localStorage.setItem("speak_it_simple_final",JSON.stringify(state));
 
-let queue=[],qi=0,filter="pending",examQueue=[],examIndex=0,examMode="group",failedRound=[],studyRound=1;
+let queue=[],qi=0,filter="pending",examQueue=[],examIndex=0,examMode="group",failedRound=[],studyRound=1,familiarIds=new Set();
+
+function mergeLegacyLocalData(){
+  const base=state.items||[];
+  const seen=new Set(base.map(x=>String(x.en||"").trim().toLowerCase()));
+  let added=0;
+  for(let i=0;i<localStorage.length;i++){
+    const key=localStorage.key(i);
+    if(!key||key==="speak_it_simple_final")continue;
+    try{
+      const raw=JSON.parse(localStorage.getItem(key));
+      const arr=Array.isArray(raw)?raw:(raw&&Array.isArray(raw.items)?raw.items:null);
+      if(!arr)continue;
+      for(const x of arr){
+        if(!x||!x.en||!x.cn)continue;
+        const k=String(x.en).trim().toLowerCase();
+        if(!k||seen.has(k))continue;
+        base.push({
+          id:x.id||Date.now()+Math.random(),
+          en:String(x.en).trim(),
+          cn:String(x.cn).trim(),
+          status:x.status==="mastered"?"mastered":x.status==="learning"?"learning":"pending",
+          stage:Number.isFinite(x.stage)?x.stage:0,
+          reset:Number.isFinite(x.reset)?x.reset:0,
+          next_review_at:x.next_review_at||null
+        });
+        seen.add(k);added++;
+      }
+    }catch(e){}
+  }
+  if(added)localStorage.setItem("speak_it_simple_final",JSON.stringify(state));
+  return added;
+}
+function saveActiveSession(){
+  const data={queueIds:queue.map(x=>x.id),qi,studyRound,familiarIds:[...familiarIds],examMode,examIndex,examQueueIds:examQueue.map(x=>x.id)};
+  localStorage.setItem("speak_it_active_session",JSON.stringify(data));
+}
+function clearActiveSession(){localStorage.removeItem("speak_it_active_session")}
+function recoverActiveSession(){
+  try{
+    const s=JSON.parse(localStorage.getItem("speak_it_active_session")||"null");
+    if(!s||!Array.isArray(s.queueIds)||!s.queueIds.length)return false;
+    queue=s.queueIds.map(id=>state.items.find(x=>x.id===id)).filter(Boolean);
+    if(!queue.length)return false;
+    qi=Math.min(Number(s.qi)||0,queue.length);
+    studyRound=Math.max(1,Math.min(5,Number(s.studyRound)||1));
+    familiarIds=new Set(Array.isArray(s.familiarIds)?s.familiarIds:[]);
+    examMode=s.examMode||"group";
+    examIndex=Number(s.examIndex)||0;
+    examQueue=Array.isArray(s.examQueueIds)?s.examQueueIds.map(id=>state.items.find(x=>x.id===id)).filter(Boolean):[];
+    return true;
+  }catch(e){return false}
+}
 function dateKey(offset=0){const d=new Date();d.setHours(12,0,0,0);d.setDate(d.getDate()+offset);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
 function todayKey(){return dateKey(0)}
 function getDailyIdsFor(key){try{return JSON.parse(localStorage.getItem("speak_it_daily_"+key)||"[]")}catch(e){return []}}
@@ -119,7 +172,12 @@ function yesterdayGateKey(){return "speak_it_yesterday_gate_"+todayKey()}
 function yesterdayGateDone(){return localStorage.getItem(yesterdayGateKey())==="1"}
 function needsYesterdayGate(){return yesterdayIds().length>0&&!yesterdayGateDone()}
 function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
-function save(){localStorage.setItem("speak_it_simple_final",JSON.stringify(state));renderAll()}
+function save(){
+  const payload=JSON.stringify(state);
+  localStorage.setItem("speak_it_simple_final",payload);
+  localStorage.setItem("speak_it_backup_latest",payload);
+  renderAll()
+}
 function showPage(id,btn){
   document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));
   $(id).classList.add("active");
@@ -147,6 +205,8 @@ function renderAll(){
   const yb=$("yesterdayExamBtn"),sb=$("startBtn"),needY=needsYesterdayGate(),yc=yesterdayIds().length;
   if(yb){yb.style.display=needY?"block":"none";yb.textContent="先完成昨日词汇考试（"+yc+"）";}
   if(sb)sb.textContent=needY?"先考昨天，再开始今天":"开始学习";
+  const rb=$("resumeBox");
+  if(rb)rb.style.display=localStorage.getItem("speak_it_active_session")?"block":"none";
   renderNextGroup();renderLibrary();
 }
 function renderNextGroup(){
@@ -192,19 +252,28 @@ function addItem(en,cn){
   if(state.items.some(x=>String(x.en||"").trim().toLowerCase()===en.toLowerCase()))return false;
   state.items.push(makeItem(en,cn));return true;
 }
+function resumeSession(){
+  if(!recoverActiveSession())return alert("没有可恢复的学习进度");
+  showPage("learn");
+  if(examQueue.length&&examIndex<examQueue.length&&examMode!=="group"){loadExamItem();return}
+  if(examQueue.length&&examIndex<examQueue.length&&studyRound>=5){loadExamItem();return}
+  loadStudyItem();
+}
 function startSession(){
   if(needsYesterdayGate())return startYesterdayExam();
   const due=state.items.filter(isDue),pending=state.items.filter(x=>x.status==="pending").slice(0,5);
   queue=[...due,...pending];
   if(!queue.length)return alert("今天没有到期复习，也没有待学习内容");
-  qi=0;studyRound=1;examMode="group";showPage("learn");loadStudyItem();
+  qi=0;studyRound=1;familiarIds=new Set();examMode="group";showPage("learn");saveActiveSession();loadStudyItem();
 }
 function loadStudyItem(){
+  while(qi<queue.length&&familiarIds.has(queue[qi].id))qi++;
   if(qi>=queue.length){
     if(studyRound<5){
       studyRound++;
       queue=shuffle(queue);
       qi=0;
+      saveActiveSession();
       return loadStudyItem();
     }
     startGroupExam();
@@ -215,12 +284,22 @@ function loadStudyItem(){
   $("progressText").textContent=(qi+1)+" / "+queue.length;
   $("learnEn").textContent=x.en;$("learnCn").textContent=x.cn;
   $("studyView").style.display="";$("examView").style.display="none";
+  saveActiveSession();
   setTimeout(()=>speakCurrent(),180);
 }
-function nextStudyItem(){qi++;loadStudyItem()}
+function nextStudyItem(){qi++;saveActiveSession();loadStudyItem()}
+function markFamiliar(){
+  const x=queue[qi];
+  if(!x)return;
+  familiarIds.add(x.id);
+  qi++;
+  saveActiveSession();
+  loadStudyItem();
+}
 function startGroupExam(){
   addDailyIds(queue.map(x=>x.id));
   examMode="group";examQueue=shuffle(queue);examIndex=0;
+  saveActiveSession();
   showPage("learn");loadExamItem();
 }
 function startDailyExam(){
@@ -248,8 +327,8 @@ function loadExamItem(){
       showPage("today");renderAll();
       return startSession();
     }
-    if(examMode==="daily"){alert("今日总考试完成");showPage("today");}
-    else showPage("done");
+    if(examMode==="daily"){alert("今日总考试完成");clearActiveSession();showPage("today");}
+    else {clearActiveSession();showPage("done");}
     return;
   }
   const x=examQueue[examIndex];
@@ -314,7 +393,7 @@ function markPass(){
   if($("answerReveal").style.display==="none")return revealAnswer();
   const x=currentExamReal();
   if(examMode==="group"||examMode==="yesterday")advanceCycle(x);
-  examIndex++;save();loadExamItem();
+  examIndex++;save();saveActiveSession();loadExamItem();
 }
 function markFail(){
   if($("answerReveal").style.display==="none")return revealAnswer();
@@ -325,8 +404,10 @@ function markFail(){
   n.innerHTML='<b>这题没记住，周期已重置</b>'+extra+'<div class="small" style="margin-top:6px">正确英文：</div><div style="margin-top:8px"><b>'+esc(x.en)+'</b></div><div class="cn">'+esc(x.cn)+'</div><button class="secondary" style="margin-top:10px" onclick="speakText('+JSON.stringify(x.en)+')">🔊 听正确发音</button><button class="primary" style="margin-top:10px" onclick="continueAfterFail()">继续下一题</button>';
   save();
 }
-function continueAfterFail(){examIndex++;loadExamItem()}
+function continueAfterFail(){examIndex++;saveActiveSession();loadExamItem()}
 function esc(s){return String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
 if("serviceWorker"in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}))}
+const recoveredCount=mergeLegacyLocalData();
 renderAll();
+if(recoveredCount>0)setTimeout(()=>alert("已自动找回 "+recoveredCount+" 条旧词汇"),120);
 </script></body></html>
