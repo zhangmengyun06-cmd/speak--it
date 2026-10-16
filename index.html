@@ -21,7 +21,7 @@ be ourselves around each other = 在彼此面前做自己"></textarea><button cl
   <div class="learn-en" id="learnEn"></div>
   <div class="learn-cn" id="learnCn"></div>
   <button class="listen" onclick="speakCurrent()">🔊</button>
-  <div class="hint">进入卡片会自动播放英文；跟读一遍，再进入下一个。</div>
+  <div class="hint">这一组会循环学习 5 遍。每次进入卡片自动播放英文，你跟读后再进入下一个。</div>
   <button class="primary" style="margin-top:22px" onclick="nextStudyItem()">下一个</button>
 </div>
 <div id="examView" style="display:none">
@@ -108,7 +108,7 @@ for(const [en,cn] of SEED_PAIRS){
 }
 localStorage.setItem("speak_it_simple_final",JSON.stringify(state));
 
-let queue=[],qi=0,filter="pending",examQueue=[],examIndex=0,examMode="group",failedRound=[];
+let queue=[],qi=0,filter="pending",examQueue=[],examIndex=0,examMode="group",failedRound=[],studyRound=1;
 function dateKey(offset=0){const d=new Date();d.setHours(12,0,0,0);d.setDate(d.getDate()+offset);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
 function todayKey(){return dateKey(0)}
 function getDailyIdsFor(key){try{return JSON.parse(localStorage.getItem("speak_it_daily_"+key)||"[]")}catch(e){return []}}
@@ -197,12 +197,21 @@ function startSession(){
   const due=state.items.filter(isDue),pending=state.items.filter(x=>x.status==="pending").slice(0,5);
   queue=[...due,...pending];
   if(!queue.length)return alert("今天没有到期复习，也没有待学习内容");
-  qi=0;examMode="group";showPage("learn");loadStudyItem();
+  qi=0;studyRound=1;examMode="group";showPage("learn");loadStudyItem();
 }
 function loadStudyItem(){
-  if(qi>=queue.length){startGroupExam();return}
+  if(qi>=queue.length){
+    if(studyRound<5){
+      studyRound++;
+      queue=shuffle(queue);
+      qi=0;
+      return loadStudyItem();
+    }
+    startGroupExam();
+    return;
+  }
   const x=queue[qi];
-  $("learnTitle").textContent="学习";
+  $("learnTitle").textContent="学习 · 第 "+studyRound+" / 5 遍";
   $("progressText").textContent=(qi+1)+" / "+queue.length;
   $("learnEn").textContent=x.en;$("learnCn").textContent=x.cn;
   $("studyView").style.display="";$("examView").style.display="none";
@@ -246,7 +255,7 @@ function loadExamItem(){
   const x=examQueue[examIndex];
   $("learnTitle").textContent=examMode==="daily"?"今日总考试":examMode==="yesterday"?"昨日词汇考试":"本组考试";
   $("progressText").textContent=(examIndex+1)+" / "+examQueue.length;
-  $("examStep").textContent=examMode==="daily"?"FINAL · 今日内容随机打乱":examMode==="yesterday"?"DAY 2 · 先考昨天，只看中文":"STEP 2 · 本组随机打乱，只看中文";
+  $("examStep").textContent=examMode==="daily"?"FINAL · 今日内容随机打乱":examMode==="yesterday"?"DAY 2 · 先考昨天，只看中文":"STEP 2 · 学满 5 遍后，本组随机考试";
   $("examCn").textContent=x.cn;
   $("correctEn").textContent=x.en;
   $("studyView").style.display="none";$("examView").style.display="";
