@@ -431,10 +431,10 @@ function markFail(){
   if($("answerReveal").style.display==="none")return revealAnswer();
   const x=currentExamReal();resetCycle(x);
   if(examMode==="yesterday")failedRound.push(x);
-  const n=$("examNotice");n.style.display="block";
-  const extra=examMode==="yesterday"?'<div class="small" style="margin-top:6px">这一题会在本轮结束后，再进入下一轮考试。</div>':'';
-  n.innerHTML='<b>这题没记住，周期已重置</b>'+extra+'<div class="small" style="margin-top:6px">正确英文：</div><div style="margin-top:8px"><b>'+esc(x.en)+'</b></div><div class="cn">'+esc(x.cn)+'</div><button class="secondary" style="margin-top:10px" onclick="speakText('+JSON.stringify(x.en)+')">🔊 听正确发音</button><button class="primary" style="margin-top:10px" onclick="continueAfterFail()">继续下一题</button>';
+  examIndex++;
   save();
+  saveActiveSession();
+  loadExamItem();
 }
 function continueAfterFail(){examIndex++;saveActiveSession();loadExamItem()}
 function esc(s){return String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
