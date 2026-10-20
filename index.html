@@ -224,7 +224,7 @@ async function submitAuth(){
   $("authMsg").textContent="处理中…";
   try{
     if(authMode==="signup"){
-      const {data,error}=await supabaseClient.auth.signUp({email,password,options:{emailRedirectTo:location.origin+location.pathname}});
+      const {data,error}=await supabaseClient.auth.signUp({email,password,options:{emailRedirectTo:"https://zhangmengyun06-cmd.github.io/speak--it/"}});
       if(error)throw error;
       if(!data.session){
         $("authMsg").textContent="注册成功，请去邮箱点确认链接，再回来登录。";
