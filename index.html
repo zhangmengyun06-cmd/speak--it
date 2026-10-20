@@ -1,8 +1,23 @@
 <!doctype html>
 <html lang="zh-CN">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#FAF8F4"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Speak It"><link rel="manifest" href="manifest.json"><title>Speak It</title>
-<style>:root{--bg:#FAF8F4;--card:#fff;--text:#181818;--muted:#969696;--line:#ECE8E1;--yellow:#FFF1B8}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}body{margin:0;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",Arial,sans-serif;color:var(--text)}.app{max-width:480px;margin:auto;min-height:100vh;padding-bottom:92px}.page{display:none}.page.active{display:block}.header{padding:28px 18px 10px}.header h1{margin:0;font-size:30px}.header p{margin:6px 0 0;color:var(--muted);font-size:14px}.section{padding:10px 16px}.card{background:#fff;border:1px solid var(--line);border-radius:24px;padding:18px}.small{font-size:13px;color:var(--muted)}.big{font-size:36px;font-weight:800}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}.stat{background:#FFFDF9;border:1px solid var(--line);border-radius:18px;padding:13px 8px;text-align:center}.stat b{font-size:22px}.stat span{display:block;font-size:12px;color:var(--muted);margin-top:4px}button,textarea,input{font:inherit}.primary,.secondary{width:100%;border-radius:18px;padding:15px;font-weight:700}.primary{border:none;background:#1B1B1B;color:#fff}.secondary{background:#fff;border:1px solid var(--line);color:var(--text)}.row{display:flex;gap:10px}.row>*{flex:1}textarea,input{width:100%;border:1px solid var(--line);background:#fff;border-radius:18px;padding:14px;outline:none}.group{background:#fff;border:1px solid var(--line);border-radius:20px;padding:15px;margin-bottom:10px}.group-head{display:flex;justify-content:space-between;align-items:center}.badge{font-size:12px;border-radius:999px;padding:6px 9px;background:var(--yellow)}.item{padding:10px 0;border-top:1px solid #F3F0EB}.en{font-size:17px;font-weight:700}.cn{font-size:13px;color:var(--muted);margin-top:4px}.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(480px,100%);display:grid;grid-template-columns:repeat(4,1fr);background:rgba(255,255,255,.96);backdrop-filter:blur(16px);border-top:1px solid var(--line);padding:8px 4px calc(8px + env(safe-area-inset-bottom));z-index:20}.nav button{border:none;background:none;color:var(--muted);padding:7px 0;font-size:12px}.nav button.active{color:#111}.nav strong{display:block;font-size:20px}.learn-card{min-height:66vh;display:flex;flex-direction:column;justify-content:center;text-align:center;background:#fff;border:1px solid var(--line);border-radius:28px;padding:24px}.step{font-size:12px;color:var(--muted);letter-spacing:.08em;margin-bottom:24px}.learn-en{font-size:34px;font-weight:800;line-height:1.3}.learn-cn{font-size:16px;color:var(--muted);margin-top:10px}.listen{margin:28px auto 10px;width:74px;height:74px;border:none;border-radius:50%;background:var(--yellow);font-size:29px}.mic{margin:18px auto 8px;width:88px;height:88px;border:none;border-radius:50%;background:#1B1B1B;color:#fff;font-size:31px}.answer-cn{font-size:29px;font-weight:800;line-height:1.4;margin:24px 0;cursor:pointer}.answer-reveal{display:none;margin:14px 0 4px;padding:16px;border-radius:18px;background:#FFF8E2}.answer-reveal .correct-en{font-size:24px;font-weight:800;line-height:1.35}.answer-reveal .tap-note{font-size:12px;color:var(--muted);margin-top:6px}.hint{font-size:13px;color:var(--muted);line-height:1.6}.notice{display:none;margin-top:16px;padding:14px;border-radius:16px;background:#FFF8E2;text-align:left}.heard{margin-top:12px;padding:12px;border-radius:14px;background:#F7F7F5;text-align:left}.tabs{display:flex;gap:8px;overflow:auto;margin-bottom:12px}.chip{white-space:nowrap;border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 12px;color:var(--muted)}.chip.active{background:#1B1B1B;color:#fff}.empty{text-align:center;color:var(--muted);padding:36px 10px}.done{text-align:center;padding:36px 18px}.done .check{font-size:58px}.done h2{font-size:28px;margin:8px 0}.done p{color:var(--muted);line-height:1.7}</style></head>
-<body><div class="app">
+<style>:root{--bg:#FAF8F4;--card:#fff;--text:#181818;--muted:#969696;--line:#ECE8E1;--yellow:#FFF1B8}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}body{margin:0;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",Arial,sans-serif;color:var(--text)}.app{max-width:480px;margin:auto;min-height:100vh;padding-bottom:92px}.page{display:none}.page.active{display:block}.header{padding:28px 18px 10px}.header h1{margin:0;font-size:30px}.header p{margin:6px 0 0;color:var(--muted);font-size:14px}.section{padding:10px 16px}.card{background:#fff;border:1px solid var(--line);border-radius:24px;padding:18px}.small{font-size:13px;color:var(--muted)}.big{font-size:36px;font-weight:800}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}.stat{background:#FFFDF9;border:1px solid var(--line);border-radius:18px;padding:13px 8px;text-align:center}.stat b{font-size:22px}.stat span{display:block;font-size:12px;color:var(--muted);margin-top:4px}button,textarea,input{font:inherit}.primary,.secondary{width:100%;border-radius:18px;padding:15px;font-weight:700}.primary{border:none;background:#1B1B1B;color:#fff}.secondary{background:#fff;border:1px solid var(--line);color:var(--text)}.row{display:flex;gap:10px}.row>*{flex:1}textarea,input{width:100%;border:1px solid var(--line);background:#fff;border-radius:18px;padding:14px;outline:none}.group{background:#fff;border:1px solid var(--line);border-radius:20px;padding:15px;margin-bottom:10px}.group-head{display:flex;justify-content:space-between;align-items:center}.badge{font-size:12px;border-radius:999px;padding:6px 9px;background:var(--yellow)}.item{padding:10px 0;border-top:1px solid #F3F0EB}.en{font-size:17px;font-weight:700}.cn{font-size:13px;color:var(--muted);margin-top:4px}.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(480px,100%);display:grid;grid-template-columns:repeat(4,1fr);background:rgba(255,255,255,.96);backdrop-filter:blur(16px);border-top:1px solid var(--line);padding:8px 4px calc(8px + env(safe-area-inset-bottom));z-index:20}.nav button{border:none;background:none;color:var(--muted);padding:7px 0;font-size:12px}.nav button.active{color:#111}.nav strong{display:block;font-size:20px}.learn-card{min-height:66vh;display:flex;flex-direction:column;justify-content:center;text-align:center;background:#fff;border:1px solid var(--line);border-radius:28px;padding:24px}.step{font-size:12px;color:var(--muted);letter-spacing:.08em;margin-bottom:24px}.learn-en{font-size:34px;font-weight:800;line-height:1.3}.learn-cn{font-size:16px;color:var(--muted);margin-top:10px}.listen{margin:28px auto 10px;width:74px;height:74px;border:none;border-radius:50%;background:var(--yellow);font-size:29px}.mic{margin:18px auto 8px;width:88px;height:88px;border:none;border-radius:50%;background:#1B1B1B;color:#fff;font-size:31px}.answer-cn{font-size:29px;font-weight:800;line-height:1.4;margin:24px 0;cursor:pointer}.answer-reveal{display:none;margin:14px 0 4px;padding:16px;border-radius:18px;background:#FFF8E2}.answer-reveal .correct-en{font-size:24px;font-weight:800;line-height:1.35}.answer-reveal .tap-note{font-size:12px;color:var(--muted);margin-top:6px}.hint{font-size:13px;color:var(--muted);line-height:1.6}.notice{display:none;margin-top:16px;padding:14px;border-radius:16px;background:#FFF8E2;text-align:left}.heard{margin-top:12px;padding:12px;border-radius:14px;background:#F7F7F5;text-align:left}.tabs{display:flex;gap:8px;overflow:auto;margin-bottom:12px}.chip{white-space:nowrap;border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 12px;color:var(--muted)}.chip.active{background:#1B1B1B;color:#fff}.empty{text-align:center;color:var(--muted);padding:36px 10px}.done{text-align:center;padding:36px 18px}.done .check{font-size:58px}.done h2{font-size:28px;margin:8px 0}.done p{color:var(--muted);line-height:1.7}.auth{max-width:480px;margin:0 auto;padding:64px 18px 30px}.auth-card{background:#fff;border:1px solid var(--line);border-radius:28px;padding:22px}.auth h1{font-size:34px;margin:0 0 6px}.auth p{color:var(--muted);font-size:14px;line-height:1.6}.auth-tabs{display:flex;gap:8px;margin:18px 0}.auth-tabs button{flex:1;border:1px solid var(--line);background:#fff;border-radius:14px;padding:11px;font-weight:700}.auth-tabs button.active{background:#1B1B1B;color:#fff}.auth-msg{min-height:20px;margin-top:10px;font-size:13px;color:#8a6b00}.account-row{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}.account-email{font-size:13px;color:var(--muted);overflow-wrap:anywhere}</style></head>
+<body>
+<section id="authGate" class="auth">
+  <div class="auth-card">
+    <h1>Speak It</h1>
+    <p>登录后，每个人都有自己独立的词书和学习进度。换手机也可以继续。</p>
+    <div class="auth-tabs">
+      <button id="loginTab" class="active" onclick="setAuthMode('login')">登录</button>
+      <button id="signupTab" onclick="setAuthMode('signup')">注册</button>
+    </div>
+    <input id="authEmail" type="email" autocomplete="email" placeholder="邮箱">
+    <input id="authPassword" type="password" autocomplete="current-password" placeholder="密码（至少 6 位）" style="margin-top:10px">
+    <button id="authSubmit" class="primary" style="margin-top:12px" onclick="submitAuth()">登录</button>
+    <div id="authMsg" class="auth-msg"></div>
+  </div>
+</section>
+<div id="mainApp" class="app" style="display:none">
 <section id="today" class="page active"><div class="header"><h1>Speak It</h1><p>想得到，说得出。</p></div><div class="section"><div class="card"><div class="small">今天</div><div class="big" id="todayTotal">0</div><div class="grid"><div class="stat"><b id="dueCount">0</b><span>到期复习</span></div><div class="stat"><b id="pendingCount">0</b><span>待学习</span></div><div class="stat"><b id="groupCount">0</b><span>待学习组</span></div></div><button id="startBtn" class="primary" style="margin-top:16px" onclick="startSession()">开始学习</button>
 <button id="yesterdayExamBtn" class="secondary" style="margin-top:10px;display:none;background:#FFF1B8" onclick="startYesterdayExam()">先完成昨日词汇考试</button>
 <button id="dailyExamBtn" class="secondary" style="margin-top:10px;display:none" onclick="startDailyExam()">今日总考试</button>
@@ -15,7 +30,7 @@ financial ties = 经济利益关系
 pick my son up from school = 去学校接儿子
 be ourselves around each other = 在彼此面前做自己"></textarea><button class="primary" style="margin-top:12px" onclick="addBatch()">批量加入</button></div></div></section>
 <section id="library" class="page"><div class="header"><h1>词书</h1><p>待学习、学习中、已掌握。</p></div><div class="section"><div class="tabs"><button class="chip active" onclick="setFilter('pending',this)">待学习</button><button class="chip" onclick="setFilter('learning',this)">学习中</button><button class="chip" onclick="setFilter('mastered',this)">已掌握</button></div><div id="libraryList"></div></div></section>
-<section id="me" class="page"><div class="header"><h1>我的</h1><p>只看真正有用的数据。</p></div><div class="section"><div class="card"><div class="grid"><div class="stat"><b id="mPending">0</b><span>待学习</span></div><div class="stat"><b id="mLearning">0</b><span>学习中</span></div><div class="stat"><b id="mMastered">0</b><span>已掌握</span></div></div></div></div></section>
+<section id="me" class="page"><div class="header"><h1>我的</h1><p>词书和学习进度会同步到你的账号。</p></div><div class="section"><div class="card"><div class="grid"><div class="stat"><b id="mPending">0</b><span>待学习</span></div><div class="stat"><b id="mLearning">0</b><span>学习中</span></div><div class="stat"><b id="mMastered">0</b><span>已掌握</span></div></div><div class="account-row"><div><div class="small">当前账号</div><div id="accountEmail" class="account-email"></div></div><button class="secondary" style="width:auto;padding:10px 14px" onclick="logout()">退出</button></div></div></div></section>
 <section id="learn" class="page"><div class="header"><h1 id="learnTitle">学习</h1><p id="progressText">1 / 5</p></div><div class="section"><div class="learn-card">
 <div id="studyView">
   <div class="step">STEP 1 · 先学完这一组</div>
@@ -44,7 +59,12 @@ be ourselves around each other = 在彼此面前做自己"></textarea><button cl
 </div></div></section>
 <section id="done" class="page"><div class="header"><h1>完成</h1><p>这一组学习 + 打乱考试已结束。</p></div><div class="done"><div class="check">✓</div><h2>这一组完成了</h2><p>回到首页可以继续下一组；今天全部学完后，再做一次“今日总考试”。</p><button class="primary" onclick="showPage('today')">回到首页</button><button class="secondary" style="margin-top:10px" onclick="startDailyExam()">今日总考试</button></div></section>
 <div class="nav"><button class="active" data-page="today" onclick="showPage('today',this)"><strong>⌂</strong>今日</button><button data-page="add" onclick="showPage('add',this)"><strong>＋</strong>新增</button><button data-page="library" onclick="showPage('library',this)"><strong>☆</strong>词书</button><button data-page="me" onclick="showPage('me',this)"><strong>☺</strong>我的</button></div></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+const SUPABASE_URL="https://zyyqwzcpxgbkqxuqxrzu.supabase.co";
+const SUPABASE_KEY="sb_publishable_njPcKgser6N1qmHWR_9S5A_yMZnbFeC";
+const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+let currentUser=null,authMode="login",cloudTimer=null,cloudReady=false;
 const REVIEW_DELAYS=[1,3,7,14,21];
 const SEED_PAIRS=[
 ["high-speed train","高铁"],
@@ -133,16 +153,129 @@ let state;
 try{state=JSON.parse(localStorage.getItem("speak_it_simple_final")||"null")}catch(e){state=null}
 if(!state||!Array.isArray(state.items)) state={items:[]};
 
-// Add the supplied vocabulary once, without destroying any existing progress.
-for(const [en,cn] of SEED_PAIRS){
-  if(!state.items.some(x=>String(x.en||"").trim().toLowerCase()===en.toLowerCase())){
-    state.items.push(makeItem(en,cn));
-  }
-}
 localStorage.setItem("speak_it_simple_final",JSON.stringify(state));
 
 let queue=[],qi=0,filter="pending",examQueue=[],examIndex=0,examMode="group",failedRound=[],studyRound=1,familiarIds=new Set();
 
+function cloudMeta(){
+  const meta={};
+  for(let i=0;i<localStorage.length;i++){
+    const k=localStorage.key(i);
+    if(k&&(
+      k.startsWith("speak_it_daily_")||
+      k.startsWith("speak_it_yesterday_gate_")||
+      k==="speak_it_active_session"
+    )) meta[k]=localStorage.getItem(k);
+  }
+  return meta;
+}
+function cloudSnapshot(){return {version:1,state,meta:cloudMeta()}}
+function applyCloudSnapshot(data){
+  if(data&&data.state&&Array.isArray(data.state.items)){
+    state=data.state;
+    localStorage.setItem("speak_it_simple_final",JSON.stringify(state));
+  }
+  if(data&&data.meta){
+    Object.entries(data.meta).forEach(([k,v])=>{if(v!==null&&v!==undefined)localStorage.setItem(k,String(v))});
+  }
+}
+function scheduleCloudSave(){
+  if(!cloudReady||!currentUser)return;
+  clearTimeout(cloudTimer);
+  cloudTimer=setTimeout(saveCloudNow,250);
+}
+async function saveCloudNow(){
+  if(!cloudReady||!currentUser)return;
+  const {error}=await supabaseClient.from("speak_it_user_data").upsert({
+    user_id:currentUser.id,
+    data:cloudSnapshot(),
+    updated_at:new Date().toISOString()
+  },{onConflict:"user_id"});
+  if(error)console.error("Cloud save failed",error);
+}
+async function loadCloudOrMigrate(){
+  const {data,error}=await supabaseClient.from("speak_it_user_data").select("data").eq("user_id",currentUser.id).maybeSingle();
+  if(error){throw error}
+  if(data&&data.data){
+    applyCloudSnapshot(data.data);
+  }else{
+    mergeLegacyLocalData();
+    await supabaseClient.from("speak_it_user_data").upsert({
+      user_id:currentUser.id,
+      data:cloudSnapshot(),
+      updated_at:new Date().toISOString()
+    },{onConflict:"user_id"});
+  }
+  cloudReady=true;
+}
+function setAuthMode(mode){
+  authMode=mode;
+  $("loginTab").classList.toggle("active",mode==="login");
+  $("signupTab").classList.toggle("active",mode==="signup");
+  $("authSubmit").textContent=mode==="login"?"登录":"注册";
+  $("authPassword").autocomplete=mode==="login"?"current-password":"new-password";
+  $("authMsg").textContent="";
+}
+async function submitAuth(){
+  const email=$("authEmail").value.trim(),password=$("authPassword").value;
+  if(!email||!password)return $("authMsg").textContent="请输入邮箱和密码";
+  if(password.length<6)return $("authMsg").textContent="密码至少 6 位";
+  $("authSubmit").disabled=true;
+  $("authMsg").textContent="处理中…";
+  try{
+    if(authMode==="signup"){
+      const {data,error}=await supabaseClient.auth.signUp({email,password,options:{emailRedirectTo:location.origin+location.pathname}});
+      if(error)throw error;
+      if(!data.session){
+        $("authMsg").textContent="注册成功，请去邮箱点确认链接，再回来登录。";
+      }else{
+        await enterApp(data.user);
+      }
+    }else{
+      const {data,error}=await supabaseClient.auth.signInWithPassword({email,password});
+      if(error)throw error;
+      await enterApp(data.user);
+    }
+  }catch(e){
+    $("authMsg").textContent=e.message||"操作失败，请稍后再试";
+  }finally{
+    $("authSubmit").disabled=false;
+  }
+}
+async function enterApp(user){
+  currentUser=user;
+  cloudReady=false;
+  $("authGate").style.display="none";
+  $("mainApp").style.display="block";
+  $("accountEmail").textContent=user.email||"";
+  try{
+    await loadCloudOrMigrate();
+    const recoveredCount=mergeLegacyLocalData();
+    if(recoveredCount>0)await saveCloudNow();
+    renderAll();
+  }catch(e){
+    console.error(e);
+    alert("云端数据加载失败，请刷新后重试");
+  }
+}
+async function logout(){
+  await saveCloudNow();
+  await supabaseClient.auth.signOut();
+  currentUser=null;cloudReady=false;
+  $("mainApp").style.display="none";
+  $("authGate").style.display="block";
+  $("authPassword").value="";
+  $("authMsg").textContent="";
+}
+async function initAuth(){
+  const {data:{session}}=await supabaseClient.auth.getSession();
+  if(session&&session.user)await enterApp(session.user);
+  else{$("authGate").style.display="block";$("mainApp").style.display="none"}
+  supabaseClient.auth.onAuthStateChange(async(event,session)=>{
+    if(event==="SIGNED_IN"&&session&&session.user&&(!currentUser||currentUser.id!==session.user.id))await enterApp(session.user);
+    if(event==="SIGNED_OUT"){currentUser=null;cloudReady=false;$("mainApp").style.display="none";$("authGate").style.display="block"}
+  });
+}
 function mergeLegacyLocalData(){
   const base=state.items||[];
   const seen=new Set(base.map(x=>String(x.en||"").trim().toLowerCase()));
@@ -177,8 +310,9 @@ function mergeLegacyLocalData(){
 function saveActiveSession(){
   const data={queueIds:queue.map(x=>x.id),qi,studyRound,familiarIds:[...familiarIds],examMode,examIndex,examQueueIds:examQueue.map(x=>x.id)};
   localStorage.setItem("speak_it_active_session",JSON.stringify(data));
+  scheduleCloudSave();
 }
-function clearActiveSession(){localStorage.removeItem("speak_it_active_session")}
+function clearActiveSession(){localStorage.removeItem("speak_it_active_session");scheduleCloudSave()}
 function recoverActiveSession(){
   try{
     const s=JSON.parse(localStorage.getItem("speak_it_active_session")||"null");
@@ -198,7 +332,7 @@ function dateKey(offset=0){const d=new Date();d.setHours(12,0,0,0);d.setDate(d.g
 function todayKey(){return dateKey(0)}
 function getDailyIdsFor(key){try{return JSON.parse(localStorage.getItem("speak_it_daily_"+key)||"[]")}catch(e){return []}}
 function getDailyIds(){return getDailyIdsFor(todayKey())}
-function addDailyIds(ids){const merged=[...new Set([...getDailyIds(),...ids])];localStorage.setItem("speak_it_daily_"+todayKey(),JSON.stringify(merged))}
+function addDailyIds(ids){const merged=[...new Set([...getDailyIds(),...ids])];localStorage.setItem("speak_it_daily_"+todayKey(),JSON.stringify(merged));scheduleCloudSave()}
 function yesterdayIds(){return getDailyIdsFor(dateKey(-1))}
 function yesterdayGateKey(){return "speak_it_yesterday_gate_"+todayKey()}
 function yesterdayGateDone(){return localStorage.getItem(yesterdayGateKey())==="1"}
@@ -208,6 +342,7 @@ function save(){
   const payload=JSON.stringify(state);
   localStorage.setItem("speak_it_simple_final",payload);
   localStorage.setItem("speak_it_backup_latest",payload);
+  scheduleCloudSave();
   renderAll()
 }
 function showPage(id,btn){
@@ -341,7 +476,7 @@ function startDailyExam(){
 }
 function startYesterdayExam(){
   const items=yesterdayIds().map(id=>state.items.find(x=>x.id===id)).filter(Boolean);
-  if(!items.length){localStorage.setItem(yesterdayGateKey(),"1");renderAll();return startSession()}
+  if(!items.length){localStorage.setItem(yesterdayGateKey(),"1");scheduleCloudSave();renderAll();return startSession()}
   examMode="yesterday";failedRound=[];examQueue=shuffle(items);examIndex=0;showPage("learn");loadExamItem();
 }
 function loadExamItem(){
@@ -354,7 +489,7 @@ function loadExamItem(){
         alert("没通过的词再来一轮");
         return loadExamItem();
       }
-      localStorage.setItem(yesterdayGateKey(),"1");
+      localStorage.setItem(yesterdayGateKey(),"1");scheduleCloudSave();
       alert("昨日词汇考试通过，现在开始今天的学习");
       showPage("today");renderAll();
       return startSession();
@@ -439,7 +574,5 @@ function markFail(){
 function continueAfterFail(){examIndex++;saveActiveSession();loadExamItem()}
 function esc(s){return String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
 if("serviceWorker"in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}))}
-const recoveredCount=mergeLegacyLocalData();
-renderAll();
-if(recoveredCount>0)setTimeout(()=>alert("已自动找回 "+recoveredCount+" 条旧词汇"),120);
+initAuth();
 </script></body></html>
