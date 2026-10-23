@@ -19,11 +19,11 @@
 </section>
 <div id="mainApp" class="app" style="display:none">
 <section id="today" class="page active"><div class="header"><h1>Speak It</h1><p>想得到，说得出。</p></div><div class="section"><div class="card"><div class="small">今天</div><div class="big" id="todayTotal">0</div><div class="grid"><div class="stat"><b id="dueCount">0</b><span>到期复习</span></div><div class="stat"><b id="pendingCount">0</b><span>待学习</span></div><div class="stat"><b id="groupCount">0</b><span>待学习组</span></div></div><button id="startBtn" class="primary" style="margin-top:16px" onclick="startSession()">开始学习</button>
-<button id="yesterdayExamBtn" class="secondary" style="margin-top:10px;display:none;background:#FFF1B8" onclick="startYesterdayExam()">先完成昨日词汇考试</button>
+<button class="secondary" style="margin-top:10px;background:#e6f4ed" onclick="showPage('reviews')">📅 21天复习区</button><button id="yesterdayExamBtn" class="secondary" style="margin-top:10px;display:none;background:#FFF1B8" onclick="startYesterdayExam()">先完成昨日词汇考试</button>
 <button id="dailyExamBtn" class="secondary" style="margin-top:10px;display:none" onclick="startDailyExam()">今日总考试</button>
 <div id="resumeBox" class="small" style="display:none;text-align:center;margin-top:10px;padding:10px;border-radius:12px;background:#FFF8E2">检测到未完成的学习进度。<button class="secondary" style="margin-top:8px;padding:9px" onclick="resumeSession()">继续刚才那一组</button></div>
 <div class="small" style="text-align:center;margin-top:9px">先学完一组，再打乱考试；熟悉的词可点“熟”跳过后续重复，但仍会进入考试。</div></div></div><div class="section"><div class="row"><button class="secondary" onclick="showPage('add')">＋ 新增内容</button><button class="secondary" onclick="showPage('batch')">批量新增</button></div></div><div class="section"><div style="font-size:15px;font-weight:700;margin:3px 3px 9px">下一组</div><div id="nextGroup"></div></div></section>
-<section id="add" class="page"><div class="header"><h1>新增</h1><p>自己输入英文和中文。</p></div><div class="section"><div class="card"><input id="enInput" placeholder="英文，例如：refund"><input id="cnInput" style="margin-top:10px" placeholder="中文，例如：退款"><button class="primary" style="margin-top:12px" onclick="addSingle()">加入待学习词书</button></div></div></section>
+<section id="reviews" class="page"><div class="header"><h1>21天复习</h1><p>到期和逾期词汇按日期排列。</p></div><div class="section" id="reviewDates"></div></section><section id="preview" class="page"><div class="header"><h1>预览5个新词</h1><p>点击单词播放英文，准备好后进入强化记忆。</p></div><div class="section"><div id="previewList"></div><button class="primary" onclick="beginGroupRecall()">进入强化记忆 →</button></div></section><section id="add" class="page"><div class="header"><h1>新增</h1><p>自己输入英文和中文。</p></div><div class="section"><div class="card"><input id="enInput" placeholder="英文，例如：refund"><input id="cnInput" style="margin-top:10px" placeholder="中文，例如：退款"><button class="primary" style="margin-top:12px" onclick="addSingle()">加入待学习词书</button></div></div></section>
 <section id="batch" class="page"><div class="header"><h1>批量新增</h1><p>每行一条：英文=中文、英文-中文、英文 中文</p></div><div class="section"><div class="card"><textarea id="batchInput" rows="12" placeholder="refund = 退款
 get a refund = 获得退款
 financial ties = 经济利益关系
@@ -353,7 +353,13 @@ function showPage(id,btn){
   if(n)n.classList.add("active");
   window.scrollTo(0,0);
 }
-function isDue(x){return x.status==="learning"&&(!x.next_review_at||new Date(x.next_review_at)<=new Date())}
+function isDue(x){return x.status!=="pending"&&x.stage>0&&x.next_review_at&&new Date(x.next_review_at).getTime()<=Date.now()}
+function renderReviewDates(){
+ const groups={};state.items.filter(isDue).forEach(x=>{const k=new Date(x.next_review_at).toLocaleDateString("zh-CN");(groups[k]??=[]).push(x)});
+ const keys=Object.keys(groups).sort((a,b)=>new Date(groups[a][0].next_review_at)-new Date(groups[b][0].next_review_at));
+ window.reviewGroups=keys.map(k=>groups[k]);
+ $("reviewDates").innerHTML=keys.length?keys.map((k,i)=>'<div class="card" style="margin-bottom:12px"><h3>'+esc(k)+'</h3><p class="small">待复习 '+groups[k].length+' 个</p><button class="primary" onclick="beginRecall(window.reviewGroups['+i+'],\'review\')">双向强化记忆</button></div>').join(""):'<div class="card">今天没有待复习的词汇 🎉</div>';
+}
 function renderAll(){
   const pending=state.items.filter(x=>x.status==="pending");
   const learning=state.items.filter(x=>x.status==="learning");
@@ -368,13 +374,13 @@ function renderAll(){
   $("mMastered").textContent=mastered.length;
   const dailyCount=getDailyIds().length;
   const db=$("dailyExamBtn");
-  if(db){db.style.display=dailyCount?"block":"none";db.textContent="今日总考试（"+dailyCount+"）";}
-  const yb=$("yesterdayExamBtn"),sb=$("startBtn"),needY=needsYesterdayGate(),yc=yesterdayIds().length;
+  if(db){db.style.display="none";}
+  const yb=$("yesterdayExamBtn"),sb=$("startBtn"),needY=false,yc=0;
   if(yb){yb.style.display=needY?"block":"none";yb.textContent="先完成昨日词汇考试（"+yc+"）";}
-  if(sb)sb.textContent=needY?"先考昨天，再开始今天":"开始学习";
+  if(sb)sb.textContent="学习下一组新词";
   const rb=$("resumeBox");
-  if(rb)rb.style.display=localStorage.getItem("speak_it_active_session")?"block":"none";
-  renderNextGroup();renderLibrary();
+  if(rb)rb.style.display="none";
+  renderNextGroup();renderLibrary();renderReviewDates();
 }
 function renderNextGroup(){
   const p=state.items.filter(x=>x.status==="pending").slice(0,5),box=$("nextGroup");
@@ -420,112 +426,74 @@ function addItem(en,cn){
   if(state.items.some(x=>String(x.en||"").trim().toLowerCase()===en.toLowerCase()))return false;
   state.items.push(makeItem(en,cn));return true;
 }
-function resumeSession(){
-  if(!recoverActiveSession())return alert("没有可恢复的学习进度");
-  showPage("learn");
-  if(examQueue.length&&examIndex<examQueue.length&&examMode!=="group"){loadExamItem();return}
-  if(examQueue.length&&examIndex<examQueue.length&&studyRound>=5){loadExamItem();return}
-  loadStudyItem();
-}
+
+let recallMode="new",recallRound=0,recallItems=[],recallMiss=new Set(),reinforceIds=[],reinforceRound=0,reinforceIndex=0,previewItems=[];
+function resumeSession(){alert("新版从首页开始学习，原有词书和进度已保留。");showPage("today")}
 function startSession(){
-  if(needsYesterdayGate())return startYesterdayExam();
-  const due=state.items.filter(isDue),pending=state.items.filter(x=>x.status==="pending").slice(0,5);
-  queue=[...due,...pending];
-  if(!queue.length)return alert("今天没有到期复习，也没有待学习内容");
-  qi=0;studyRound=1;familiarIds=new Set();examMode="group";showPage("learn");saveActiveSession();loadStudyItem();
+ previewItems=state.items.filter(x=>x.status==="pending").slice(0,5);
+ if(!previewItems.length)return alert("没有待学习新词，请查看21天复习区");
+ $("previewList").innerHTML=previewItems.map((x,i)=>'<div class="card" style="margin-bottom:10px" onclick="speakText('+JSON.stringify(x.en).replace(/"/g,"&quot;")+')"><div class="small">第'+(i+1)+'个 · 点击发音 🔊</div><div class="en">'+esc(x.en)+'</div><div class="cn">'+esc(x.cn)+'</div></div>').join("");
+ showPage("preview");
 }
-function loadStudyItem(){
-  while(qi<queue.length&&familiarIds.has(queue[qi].id))qi++;
-  if(qi>=queue.length){
-    if(studyRound<5){
-      studyRound++;
-      queue=shuffle(queue);
-      qi=0;
-      saveActiveSession();
-      return loadStudyItem();
-    }
-    startGroupExam();
-    return;
-  }
-  const x=queue[qi];
-  $("learnTitle").textContent="学习 · 第 "+studyRound+" / 5 遍";
-  $("progressText").textContent=(qi+1)+" / "+queue.length;
-  $("learnEn").textContent=x.en;$("learnCn").textContent=x.cn;
-  $("studyView").style.display="";$("examView").style.display="none";
-  saveActiveSession();
-  setTimeout(()=>speakCurrent(),180);
+function beginGroupRecall(){
+ addDailyIds(previewItems.map(x=>x.id));
+ const items=getDailyIds().map(id=>state.items.find(x=>x.id===id)).filter(Boolean);
+ beginRecall(items,"new");
 }
-function nextStudyItem(){qi++;saveActiveSession();loadStudyItem()}
-function markFamiliar(){
-  const x=queue[qi];
-  if(!x)return;
-  familiarIds.add(x.id);
-  qi++;
-  saveActiveSession();
-  loadStudyItem();
-}
-function startGroupExam(){
-  addDailyIds(queue.map(x=>x.id));
-  examMode="group";examQueue=shuffle(queue);examIndex=0;
-  saveActiveSession();
-  showPage("learn");loadExamItem();
-}
-function startDailyExam(){
-  const ids=getDailyIds(),items=ids.map(id=>state.items.find(x=>x.id===id)).filter(Boolean);
-  if(!items.length)return alert("今天还没有学过内容");
-  examMode="daily";failedRound=[];examQueue=shuffle(items);examIndex=0;showPage("learn");loadExamItem();
-}
-function startYesterdayExam(){
-  const items=yesterdayIds().map(id=>state.items.find(x=>x.id===id)).filter(Boolean);
-  if(!items.length){localStorage.setItem(yesterdayGateKey(),"1");scheduleCloudSave();renderAll();return startSession()}
-  examMode="yesterday";failedRound=[];examQueue=shuffle(items);examIndex=0;showPage("learn");loadExamItem();
+function startDailyExam(){const items=getDailyIds().map(id=>state.items.find(x=>x.id===id)).filter(Boolean);if(items.length)beginRecall(items,"new");else alert("今天还没有学习新词")}
+function startYesterdayExam(){showPage("reviews")}
+function beginRecall(items,mode){
+ if(!items.length)return;
+ recallMode=mode;recallItems=[...items];recallRound=0;recallMiss=new Set();examIndex=0;examQueue=shuffle(recallItems);showPage("learn");loadExamItem();
 }
 function loadExamItem(){
-  if(examIndex>=examQueue.length){
-    save();
-    if(examMode==="yesterday"){
-      if(failedRound.length){
-        examQueue=shuffle([...new Map(failedRound.map(x=>[x.id,x])).values()]);
-        failedRound=[];examIndex=0;
-        alert("没通过的词再来一轮");
-        return loadExamItem();
-      }
-      localStorage.setItem(yesterdayGateKey(),"1");scheduleCloudSave();
-      alert("昨日词汇考试通过，现在开始今天的学习");
-      showPage("today");renderAll();
-      return startSession();
-    }
-    if(examMode==="daily"){alert("今日总考试完成");clearActiveSession();showPage("today");}
-    else {clearActiveSession();showPage("done");}
-    return;
-  }
-  const x=examQueue[examIndex];
-  $("learnTitle").textContent=examMode==="daily"?"今日总考试":examMode==="yesterday"?"昨日词汇考试":"本组考试";
-  $("progressText").textContent=(examIndex+1)+" / "+examQueue.length;
-  $("examStep").textContent=examMode==="daily"?"FINAL · 今日内容随机打乱":examMode==="yesterday"?"DAY 2 · 先考昨天，只看中文":"STEP 2 · 学满 5 遍后，本组随机考试";
-  $("examCn").textContent=x.cn;
-  $("correctEn").textContent=x.en;
-  $("studyView").style.display="none";$("examView").style.display="";
-  $("examNotice").style.display="none";$("heardBox").style.display="none";
-  $("answerReveal").style.display="none";$("judgeButtons").style.display="none";
-  $("revealHint").style.display="block";
-  $("speechStatus").textContent="也可以点麦克风，把你刚才说的英文转成文字作参考。";
+ if(examIndex>=examQueue.length){
+  if(recallRound===0){recallRound=1;examIndex=0;examQueue=shuffle(recallItems);return loadExamItem()}
+  const missed=[...recallMiss].map(id=>state.items.find(x=>x.id===id)).filter(Boolean);
+  if(missed.length){if(recallMode==="review"){missed.forEach(resetCycle);save()}reinforceIds=missed.map(x=>x.id);reinforceRound=0;reinforceIndex=0;return beginReinforcement()}
+  recallItems.forEach(x=>{if(recallMode==="review"||x.stage===0)advanceCycle(x)});
+  save();clearActiveSession();showPage(recallMode==="review"?"reviews":"done");return;
+ }
+ const x=examQueue[examIndex],first=recallRound===0;
+ $("learnTitle").textContent=recallMode==="review"?"21天复习":"累计强化记忆 · "+recallItems.length+"词";
+ $("progressText").textContent=(first?"第一轮 英文→中文":"第二轮 中文→英文")+" · "+(examIndex+1)+"/"+examQueue.length;
+ $("examStep").textContent=first?"看英文说中文":"看中文说英文";
+ $("examCn").textContent=first?x.en:x.cn;
+ $("correctEn").textContent=first?x.cn:x.en;
+ $("revealHint").textContent="自己回答后，点击上方显示正确答案，再判断对错。";
+ $("studyView").style.display="none";$("examView").style.display="";
+ $("examNotice").style.display="none";$("heardBox").style.display="none";
+ $("answerReveal").style.display="none";$("judgeButtons").style.display="none";$("revealHint").style.display="block";
+ $("speechStatus").textContent="先自己回忆，再点击查看答案。";
 }
 function revealAnswer(){
-  $("answerReveal").style.display="block";
-  $("judgeButtons").style.display="flex";
-  $("revealHint").style.display="none";
+ $("answerReveal").style.display="block";$("judgeButtons").style.display="flex";$("revealHint").style.display="none";
+ speakText(examQueue[examIndex].en);
 }
+function markPass(){if($("answerReveal").style.display==="none")return revealAnswer();examIndex++;loadExamItem()}
+function markFail(){if($("answerReveal").style.display==="none")return revealAnswer();recallMiss.add(examQueue[examIndex].id);examIndex++;loadExamItem()}
+function continueAfterFail(){markFail()}
+function beginReinforcement(){
+ if(reinforceRound>=5||!reinforceIds.length){
+  const items=reinforceIds.map(id=>state.items.find(x=>x.id===id)).filter(Boolean);
+  if(!items.length)return showPage("today");
+  recallItems=items;recallMiss=new Set();recallRound=0;examIndex=0;examQueue=shuffle(items);return loadExamItem();
+ }
+ const x=state.items.find(t=>t.id===reinforceIds[reinforceIndex]);if(!x)return nextStudyItem();
+ showPage("learn");$("studyView").style.display="";$("examView").style.display="none";
+ $("learnTitle").textContent="错词强化 · 第"+(reinforceRound+1)+"/5轮";
+ $("progressText").textContent=(reinforceIndex+1)+"/"+reinforceIds.length;
+ $("learnEn").textContent=x.en;$("learnCn").textContent=x.cn;
+ $("learnEn").style.visibility=reinforceRound>=2?"hidden":"visible";
+ $("learnEn").onclick=()=>{$("learnEn").style.visibility="visible";speakText(x.en)};
+ if(reinforceRound<2)speakText(x.en);
+}
+function nextStudyItem(){reinforceIndex++;if(reinforceIndex>=reinforceIds.length){reinforceRound++;reinforceIndex=0;reinforceIds=shuffle(reinforceIds)}beginReinforcement()}
+function markFamiliar(){const id=reinforceIds[reinforceIndex];reinforceIds=reinforceIds.filter(x=>x!==id);if(reinforceIndex>=reinforceIds.length)reinforceIndex=0;beginReinforcement()}
+function startGroupExam(){beginGroupRecall()}
+function loadStudyItem(){beginReinforcement()}
+function speakCorrectAnswer(){if(examQueue[examIndex])speakText(examQueue[examIndex].en)}
 $("examCn").addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();revealAnswer()}});
-function revealAnswer(){
-  $("answerReveal").style.display="block";
-  $("judgeButtons").style.display="flex";
-  $("revealHint").style.display="none";
-}
-function speakCorrectAnswer(){
-  const x=examQueue[examIndex];
-  if(x)speakText(x.en);
-}
 function getBestEnglishVoice(){
   const voices=speechSynthesis.getVoices().filter(v=>/^en-US/i.test(v.lang));
   const preferred=["Samantha","Ava","Zoe","Allison","Susan","Karen","Moira","Joelle","Evan"];
@@ -538,7 +506,7 @@ function speakText(text){
   const voice=getBestEnglishVoice();if(voice)u.voice=voice;speechSynthesis.speak(u);
 }
 function speakCurrent(){
-  const x=$("studyView").style.display!=="none"?queue[qi]:examQueue[examIndex];
+  const x=$("studyView").style.display!=="none"?state.items.find(t=>t.id===reinforceIds[reinforceIndex]):examQueue[examIndex];
   if(x)speakText(x.en);
 }
 function startRecognition(){
@@ -557,22 +525,8 @@ function advanceCycle(x){
 function resetCycle(x){
   x.status="learning";x.stage=0;x.reset=(x.reset||0)+1;x.next_review_at=null;
 }
-function markPass(){
-  if($("answerReveal").style.display==="none")return revealAnswer();
-  const x=currentExamReal();
-  if(examMode==="group"||examMode==="yesterday")advanceCycle(x);
-  examIndex++;save();saveActiveSession();loadExamItem();
-}
-function markFail(){
-  if($("answerReveal").style.display==="none")return revealAnswer();
-  const x=currentExamReal();resetCycle(x);
-  if(examMode==="yesterday")failedRound.push(x);
-  examIndex++;
-  save();
-  saveActiveSession();
-  loadExamItem();
-}
-function continueAfterFail(){examIndex++;saveActiveSession();loadExamItem()}
+function advanceCycle(x){if(x.status==="pending")x.status="learning";if(x.stage>=5){x.stage=6;x.status="mastered";x.next_review_at=null}else{x.stage++;const d=new Date();d.setHours(9,0,0,0);d.setDate(d.getDate()+(REVIEW_DELAYS[x.stage-1]||1));x.next_review_at=d.toISOString()}}
+function resetCycle(x){x.status="pending";x.stage=0;x.reset=(x.reset||0)+1;x.next_review_at=null}
 function esc(s){return String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
 if("serviceWorker"in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}))}
 initAuth();
