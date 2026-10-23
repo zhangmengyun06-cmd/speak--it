@@ -454,7 +454,7 @@ function loadExamItem(){
  $("studyView").style.display="none";$("examView").style.display="none";$("recallListView").style.display="block";
  $("learnTitle").textContent=recallMode==="review"?"21天复习":"强化记忆 · "+recallItems.length+"词";
  $("progressText").textContent=recallRound===0?"第一轮 · 看英文说中文":"第二轮 · 看中文说英文";
- $("recallRoundHint").textContent="点击单词查看答案，再选 ✓ 或 ×；每个单词都要判断。";
+ $("recallRoundHint").textContent="先自己回答，点词查看答案，再选 × 或 ✓。";
  renderRecallRows();
 }
 function renderRecallRows(){
