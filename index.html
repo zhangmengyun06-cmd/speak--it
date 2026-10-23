@@ -431,6 +431,7 @@ let recallMode="new",recallRound=0,recallItems=[],recallMiss=new Set(),reinforce
 function resumeSession(){alert("新版从首页开始学习，原有词书和进度已保留。");showPage("today")}
 
 let recallAnswers={};
+let recallPhase="group",recallFullItems=[],recallReturnItems=[],recallReturnPhase="group";
 function startSession(){
  previewItems=state.items.filter(x=>x.status==="pending").slice(0,5);
  if(!previewItems.length)return alert("没有待学习新词，请查看21天复习区");
@@ -440,19 +441,36 @@ function startSession(){
 function speakItemById(id){const x=state.items.find(t=>t.id===id);if(x)speakText(x.en)}
 function beginGroupRecall(){
  addDailyIds(previewItems.map(x=>x.id));
- const items=getDailyIds().map(id=>state.items.find(x=>x.id===id)).filter(Boolean);
- beginRecall(items,"new");
+ const items=previewItems.filter(x=>state.items.some(t=>t.id===x.id));
+ beginRecall(items,"new","group");
 }
-function startDailyExam(){const items=getDailyIds().map(id=>state.items.find(x=>x.id===id)).filter(Boolean);if(items.length)beginRecall(items,"new");else alert("今天还没有学习新词")}
+function startDailyExam(){const items=getDailyIds().map(id=>state.items.find(x=>x.id===id)).filter(Boolean);if(items.length)beginRecall(items,"new","cumulative");else alert("今天还没有学习新词")}
 function startYesterdayExam(){showPage("reviews")}
-function beginRecall(items,mode){
+function beginRecall(items,mode,phase){
  if(!items.length)return;
- recallMode=mode;recallItems=[...items];recallRound=0;recallMiss=new Set();examIndex=0;examQueue=shuffle(recallItems);showPage("learn");loadExamItem();
+ recallMode=mode;recallPhase=phase||(mode==="review"?"review":"group");
+ recallItems=[...items];recallFullItems=[...items];recallRound=0;recallMiss=new Set();examIndex=0;
+ examQueue=shuffle(recallItems);showPage("learn");loadExamItem();
+}
+function startRecallStage(items,phase){
+ recallPhase=phase;recallItems=[...items];recallRound=0;recallMiss=new Set();
+ examIndex=0;examQueue=shuffle(recallItems);showPage("learn");loadExamItem();window.scrollTo(0,0);
+}
+function finishRecallStage(){
+ if(recallPhase==="repair"){
+  return startRecallStage(recallReturnItems,recallReturnPhase);
+ }
+ if(recallPhase==="group"){
+  const items=getDailyIds().map(id=>state.items.find(x=>x.id===id)).filter(Boolean);
+  return startRecallStage(items,"cumulative");
+ }
+ recallItems.forEach(x=>{if(recallMode==="review"||x.stage===0)advanceCycle(x)});
+ save();clearActiveSession();showPage(recallMode==="review"?"reviews":"done");
 }
 function loadExamItem(){
  recallAnswers={};
  $("studyView").style.display="none";$("examView").style.display="none";$("recallListView").style.display="block";
- $("learnTitle").textContent=recallMode==="review"?"21天复习":"强化记忆 · "+recallItems.length+"词";
+ $("learnTitle").textContent=recallPhase==="repair"?"错词复测 · "+recallItems.length+"词":recallMode==="review"?"21天复习":recallPhase==="group"?"本组强化 · "+recallItems.length+"词":"今日累计强化 · "+recallItems.length+"词";
  $("progressText").textContent=recallRound===0?"第一轮 · 看英文说中文":"第二轮 · 看中文说英文";
  $("recallRoundHint").textContent="先自己回答，点词查看答案，再选 × 或 ✓。";
  renderRecallRows();
@@ -482,11 +500,11 @@ function submitRecallRound(){
  if(recallRound===0){recallRound=1;examQueue=shuffle(recallItems);loadExamItem();window.scrollTo(0,0);return}
  const missed=[...recallMiss].map(id=>state.items.find(x=>x.id===id)).filter(Boolean);
  if(missed.length){
+  if(recallPhase!=="repair"){recallReturnItems=[...recallItems];recallReturnPhase=recallPhase}
   reinforceIds=missed.map(x=>x.id);reinforceRound=0;reinforceIndex=0;
   return beginReinforcement();
  }
- recallItems.forEach(x=>{if(recallMode==="review"||x.stage===0)advanceCycle(x)});
- save();clearActiveSession();showPage(recallMode==="review"?"reviews":"done");
+ return finishRecallStage();
 }
 function revealAnswer(){revealRecallRow(examIndex)}
 function markPass(){gradeRecallRow(examIndex,true)}
@@ -496,10 +514,8 @@ function beginReinforcement(){
  if(reinforceRound>=5||!reinforceIds.length){
   const items=reinforceIds.map(id=>state.items.find(x=>x.id===id)).filter(Boolean);
   if(!items.length)return showPage("today");
-  // After five rounds on wrong words, retest ALL original words together.
-  // No word advances its review cycle until the entire batch passes both directions.
-  recallMiss=new Set();recallRound=0;examIndex=0;examQueue=shuffle(recallItems);
-  loadExamItem();window.scrollTo(0,0);return;
+  // Test only the reinforced wrong words first. Once all pass, return to the original group/cumulative round.
+  return startRecallStage(items,"repair");
  }
  const x=state.items.find(t=>t.id===reinforceIds[reinforceIndex]);if(!x)return nextStudyItem();
  showPage("learn");$("studyView").style.display="";$("examView").style.display="none";$("recallListView").style.display="none";
