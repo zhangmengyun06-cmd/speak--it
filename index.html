@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="zh-CN">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#FAF8F4"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Speak It"><link rel="manifest" href="manifest.json"><title>Speak It</title>
-<style>:root{--bg:#FAF8F4;--card:#fff;--text:#181818;--muted:#969696;--line:#ECE8E1;--yellow:#FFF1B8}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}body{margin:0;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",Arial,sans-serif;color:var(--text)}.app{max-width:480px;margin:auto;min-height:100vh;padding-bottom:92px}.page{display:none}.page.active{display:block}.header{padding:28px 18px 10px}.header h1{margin:0;font-size:30px}.header p{margin:6px 0 0;color:var(--muted);font-size:14px}.section{padding:10px 16px}.card{background:#fff;border:1px solid var(--line);border-radius:24px;padding:18px}.small{font-size:13px;color:var(--muted)}.big{font-size:36px;font-weight:800}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}.stat{background:#FFFDF9;border:1px solid var(--line);border-radius:18px;padding:13px 8px;text-align:center}.stat b{font-size:22px}.stat span{display:block;font-size:12px;color:var(--muted);margin-top:4px}button,textarea,input{font:inherit}.primary,.secondary{width:100%;border-radius:18px;padding:15px;font-weight:700}.primary{border:none;background:#1B1B1B;color:#fff}.secondary{background:#fff;border:1px solid var(--line);color:var(--text)}.row{display:flex;gap:10px}.row>*{flex:1}textarea,input{width:100%;border:1px solid var(--line);background:#fff;border-radius:18px;padding:14px;outline:none}.group{background:#fff;border:1px solid var(--line);border-radius:20px;padding:15px;margin-bottom:10px}.group-head{display:flex;justify-content:space-between;align-items:center}.badge{font-size:12px;border-radius:999px;padding:6px 9px;background:var(--yellow)}.item{padding:10px 0;border-top:1px solid #F3F0EB}.en{font-size:17px;font-weight:700}.cn{font-size:13px;color:var(--muted);margin-top:4px}.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(480px,100%);display:grid;grid-template-columns:repeat(4,1fr);background:rgba(255,255,255,.96);backdrop-filter:blur(16px);border-top:1px solid var(--line);padding:8px 4px calc(8px + env(safe-area-inset-bottom));z-index:20}.nav button{border:none;background:none;color:var(--muted);padding:7px 0;font-size:12px}.nav button.active{color:#111}.nav strong{display:block;font-size:20px}.learn-card{min-height:66vh;display:flex;flex-direction:column;justify-content:center;text-align:center;background:#fff;border:1px solid var(--line);border-radius:28px;padding:24px}.step{font-size:12px;color:var(--muted);letter-spacing:.08em;margin-bottom:24px}.learn-en{font-size:34px;font-weight:800;line-height:1.3}.learn-cn{font-size:16px;color:var(--muted);margin-top:10px}.listen{margin:28px auto 10px;width:74px;height:74px;border:none;border-radius:50%;background:var(--yellow);font-size:29px}.mic{margin:18px auto 8px;width:88px;height:88px;border:none;border-radius:50%;background:#1B1B1B;color:#fff;font-size:31px}.answer-cn{font-size:29px;font-weight:800;line-height:1.4;margin:24px 0;cursor:pointer}.answer-reveal{display:none;margin:14px 0 4px;padding:16px;border-radius:18px;background:#FFF8E2}.answer-reveal .correct-en{font-size:24px;font-weight:800;line-height:1.35}.answer-reveal .tap-note{font-size:12px;color:var(--muted);margin-top:6px}.hint{font-size:13px;color:var(--muted);line-height:1.6}.notice{display:none;margin-top:16px;padding:14px;border-radius:16px;background:#FFF8E2;text-align:left}.heard{margin-top:12px;padding:12px;border-radius:14px;background:#F7F7F5;text-align:left}.tabs{display:flex;gap:8px;overflow:auto;margin-bottom:12px}.chip{white-space:nowrap;border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 12px;color:var(--muted)}.chip.active{background:#1B1B1B;color:#fff}.empty{text-align:center;color:var(--muted);padding:36px 10px}.done{text-align:center;padding:36px 18px}.done .check{font-size:58px}.done h2{font-size:28px;margin:8px 0}.done p{color:var(--muted);line-height:1.7}.auth{max-width:480px;margin:0 auto;padding:64px 18px 30px}.auth-card{background:#fff;border:1px solid var(--line);border-radius:28px;padding:22px}.auth h1{font-size:34px;margin:0 0 6px}.auth p{color:var(--muted);font-size:14px;line-height:1.6}.auth-tabs{display:flex;gap:8px;margin:18px 0}.auth-tabs button{flex:1;border:1px solid var(--line);background:#fff;border-radius:14px;padding:11px;font-weight:700}.auth-tabs button.active{background:#1B1B1B;color:#fff}.auth-msg{min-height:20px;margin-top:10px;font-size:13px;color:#8a6b00}.account-row{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}.account-email{font-size:13px;color:var(--muted);overflow-wrap:anywhere}</style></head>
+<style>:root{--bg:#FAF8F4;--card:#fff;--text:#181818;--muted:#969696;--line:#ECE8E1;--yellow:#FFF1B8}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}body{margin:0;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",Arial,sans-serif;color:var(--text)}.app{max-width:480px;margin:auto;min-height:100vh;padding-bottom:92px}.page{display:none}.page.active{display:block}.header{padding:28px 18px 10px}.header h1{margin:0;font-size:30px}.header p{margin:6px 0 0;color:var(--muted);font-size:14px}.section{padding:10px 16px}.card{background:#fff;border:1px solid var(--line);border-radius:24px;padding:18px}.small{font-size:13px;color:var(--muted)}.big{font-size:36px;font-weight:800}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}.stat{background:#FFFDF9;border:1px solid var(--line);border-radius:18px;padding:13px 8px;text-align:center}.stat b{font-size:22px}.stat span{display:block;font-size:12px;color:var(--muted);margin-top:4px}button,textarea,input{font:inherit}.primary,.secondary{width:100%;border-radius:18px;padding:15px;font-weight:700}.primary{border:none;background:#1B1B1B;color:#fff}.secondary{background:#fff;border:1px solid var(--line);color:var(--text)}.row{display:flex;gap:10px}.row>*{flex:1}textarea,input{width:100%;border:1px solid var(--line);background:#fff;border-radius:18px;padding:14px;outline:none}.group{background:#fff;border:1px solid var(--line);border-radius:20px;padding:15px;margin-bottom:10px}.group-head{display:flex;justify-content:space-between;align-items:center}.badge{font-size:12px;border-radius:999px;padding:6px 9px;background:var(--yellow)}.item{padding:10px 0;border-top:1px solid #F3F0EB}.en{font-size:17px;font-weight:700}.cn{font-size:13px;color:var(--muted);margin-top:4px}.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(480px,100%);display:grid;grid-template-columns:repeat(4,1fr);background:rgba(255,255,255,.96);backdrop-filter:blur(16px);border-top:1px solid var(--line);padding:8px 4px calc(8px + env(safe-area-inset-bottom));z-index:20}.nav button{border:none;background:none;color:var(--muted);padding:7px 0;font-size:12px}.nav button.active{color:#111}.nav strong{display:block;font-size:20px}.learn-card{min-height:66vh;display:flex;flex-direction:column;justify-content:center;text-align:center;background:#fff;border:1px solid var(--line);border-radius:28px;padding:24px}.step{font-size:12px;color:var(--muted);letter-spacing:.08em;margin-bottom:24px}.learn-en{font-size:34px;font-weight:800;line-height:1.3}.learn-cn{font-size:16px;color:var(--muted);margin-top:10px}.listen{margin:28px auto 10px;width:74px;height:74px;border:none;border-radius:50%;background:var(--yellow);font-size:29px}.mic{margin:18px auto 8px;width:88px;height:88px;border:none;border-radius:50%;background:#1B1B1B;color:#fff;font-size:31px}.answer-cn{font-size:29px;font-weight:800;line-height:1.4;margin:24px 0;cursor:pointer}.answer-reveal{display:none;margin:14px 0 4px;padding:16px;border-radius:18px;background:#FFF8E2}.answer-reveal .correct-en{font-size:24px;font-weight:800;line-height:1.35}.answer-reveal .tap-note{font-size:12px;color:var(--muted);margin-top:6px}.hint{font-size:13px;color:var(--muted);line-height:1.6}.notice{display:none;margin-top:16px;padding:14px;border-radius:16px;background:#FFF8E2;text-align:left}.heard{margin-top:12px;padding:12px;border-radius:14px;background:#F7F7F5;text-align:left}.tabs{display:flex;gap:8px;overflow:auto;margin-bottom:12px}.chip{white-space:nowrap;border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 12px;color:var(--muted)}.chip.active{background:#1B1B1B;color:#fff}.empty{text-align:center;color:var(--muted);padding:36px 10px}.done{text-align:center;padding:36px 18px}.done .check{font-size:58px}.done h2{font-size:28px;margin:8px 0}.done p{color:var(--muted);line-height:1.7}.auth{max-width:480px;margin:0 auto;padding:64px 18px 30px}.auth-card{background:#fff;border:1px solid var(--line);border-radius:28px;padding:22px}.auth h1{font-size:34px;margin:0 0 6px}.auth p{color:var(--muted);font-size:14px;line-height:1.6}.auth-tabs{display:flex;gap:8px;margin:18px 0}.auth-tabs button{flex:1;border:1px solid var(--line);background:#fff;border-radius:14px;padding:11px;font-weight:700}.auth-tabs button.active{background:#1B1B1B;color:#fff}.auth-msg{min-height:20px;margin-top:10px;font-size:13px;color:#8a6b00}.account-row{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}.account-email{font-size:13px;color:var(--muted);overflow-wrap:anywhere}.preview-row{display:flex;align-items:center;gap:10px;padding:17px 14px;border-bottom:1px solid var(--line);background:#fff}.preview-row:first-child{border-radius:20px 20px 0 0}.preview-row:last-child{border-bottom:0;border-radius:0 0 20px 20px}.preview-words{flex:1;min-width:0}.preview-en{font-size:19px;font-weight:700;line-height:1.4;overflow-wrap:anywhere}.preview-cn{font-size:14px;color:#888;margin-top:5px}.sound-btn{border:0;background:#f5f3ef;border-radius:50%;width:42px;height:42px;flex:none;font-size:19px}.recall-row{display:flex;align-items:center;gap:10px;padding:16px 12px;border-bottom:1px solid #efede9;min-height:74px;background:#fff}.recall-row.correct{background:#e7f8f0}.recall-row.wrong{background:#fff0ee}.recall-text{flex:1;min-width:0;font-size:17px;line-height:1.45;overflow-wrap:anywhere;cursor:pointer}.recall-answer{display:block;color:#777;font-size:14px;margin-top:5px}.recall-actions{display:flex;gap:7px}.judge{border:1px solid #d7d7d7;background:#fff;border-radius:50%;height:37px;width:37px;font-size:18px;color:#aaa;padding:0}.judge.yes.selected{background:#2fc68d;border-color:#2fc68d;color:white}.judge.no.selected{background:#f15d62;border-color:#f15d62;color:white}.recall-footer{position:sticky;bottom:calc(66px + env(safe-area-inset-bottom));background:rgba(250,248,244,.98);padding:12px 0 8px;display:flex;gap:14px;align-items:center;z-index:5}.recall-footer .primary{width:auto;min-width:112px}.recall-list{border:1px solid var(--line);border-radius:18px;overflow:hidden;background:#fff}.recall-header{font-size:13px;color:#888;margin:4px 0 14px}</style></head>
 <body>
 <section id="authGate" class="auth">
   <div class="auth-card">
@@ -23,7 +23,7 @@
 <button id="dailyExamBtn" class="secondary" style="margin-top:10px;display:none" onclick="startDailyExam()">今日累计强化</button>
 <div id="resumeBox" class="small" style="display:none;text-align:center;margin-top:10px;padding:10px;border-radius:12px;background:#FFF8E2">检测到未完成的学习进度。<button class="secondary" style="margin-top:8px;padding:9px" onclick="resumeSession()">继续刚才那一组</button></div>
 <div class="small" style="text-align:center;margin-top:9px">每组预览5词，直接双向强化；只有错词需要五轮巩固。</div></div></div><div class="section"><div class="row"><button class="secondary" onclick="showPage('add')">＋ 新增内容</button><button class="secondary" onclick="showPage('batch')">批量新增</button></div></div><div class="section"><div style="font-size:15px;font-weight:700;margin:3px 3px 9px">下一组</div><div id="nextGroup"></div></div></section>
-<section id="reviews" class="page"><div class="header"><h1>21天复习</h1><p>到期和逾期词汇按日期排列。</p></div><div class="section" id="reviewDates"></div></section><section id="preview" class="page"><div class="header"><h1>预览5个新词</h1><p>点击单词播放英文，准备好后进入强化记忆。</p></div><div class="section"><div id="previewList"></div><button class="primary" onclick="beginGroupRecall()">进入强化记忆 →</button></div></section><section id="add" class="page"><div class="header"><h1>新增</h1><p>自己输入英文和中文。</p></div><div class="section"><div class="card"><input id="enInput" placeholder="英文，例如：refund"><input id="cnInput" style="margin-top:10px" placeholder="中文，例如：退款"><button class="primary" style="margin-top:12px" onclick="addSingle()">加入待学习词书</button></div></div></section>
+<section id="reviews" class="page"><div class="header"><h1>21天复习</h1><p>到期和逾期词汇按日期排列。</p></div><div class="section" id="reviewDates"></div></section><section id="preview" class="page"><div class="header"><h1>预览5个新词</h1><p>点击单词播放英文，准备好后进入强化记忆。</p></div><div class="section"><div id="previewList" class="recall-list"></div><button class="primary" onclick="beginGroupRecall()">进入强化记忆 →</button></div></section><section id="add" class="page"><div class="header"><h1>新增</h1><p>自己输入英文和中文。</p></div><div class="section"><div class="card"><input id="enInput" placeholder="英文，例如：refund"><input id="cnInput" style="margin-top:10px" placeholder="中文，例如：退款"><button class="primary" style="margin-top:12px" onclick="addSingle()">加入待学习词书</button></div></div></section>
 <section id="batch" class="page"><div class="header"><h1>批量新增</h1><p>每行一条：英文=中文、英文-中文、英文 中文</p></div><div class="section"><div class="card"><textarea id="batchInput" rows="12" placeholder="refund = 退款
 get a refund = 获得退款
 financial ties = 经济利益关系
@@ -32,7 +32,7 @@ be ourselves around each other = 在彼此面前做自己"></textarea><button cl
 <section id="library" class="page"><div class="header"><h1>词书</h1><p>待学习、学习中、已掌握。</p></div><div class="section"><div class="tabs"><button class="chip active" onclick="setFilter('pending',this)">待学习</button><button class="chip" onclick="setFilter('learning',this)">学习中</button><button class="chip" onclick="setFilter('mastered',this)">已掌握</button></div><div id="libraryList"></div></div></section>
 <section id="me" class="page"><div class="header"><h1>我的</h1><p>词书和学习进度会同步到你的账号。</p></div><div class="section"><div class="card"><div class="grid"><div class="stat"><b id="mPending">0</b><span>待学习</span></div><div class="stat"><b id="mLearning">0</b><span>学习中</span></div><div class="stat"><b id="mMastered">0</b><span>已掌握</span></div></div><div class="account-row"><div><div class="small">当前账号</div><div id="accountEmail" class="account-email"></div></div><button class="secondary" style="width:auto;padding:10px 14px" onclick="logout()">退出</button></div></div></div></section>
 <section id="learn" class="page"><div class="header"><h1 id="learnTitle">学习</h1><p id="progressText">1 / 5</p></div><div class="section"><div class="learn-card">
-<div id="studyView">
+<div id="recallListView" style="display:none"><div id="recallRoundHint" class="recall-header"></div><div id="recallRows" class="recall-list"></div><div class="recall-footer"><span id="recallStats" class="small" style="flex:1"></span><button class="primary" onclick="submitRecallRound()">完成本轮 →</button></div></div><div id="studyView">
   <div class="step">STEP 1 · 先学完这一组</div>
   <div class="learn-en" id="learnEn"></div>
   <div class="learn-cn" id="learnCn"></div>
@@ -429,12 +429,15 @@ function addItem(en,cn){
 
 let recallMode="new",recallRound=0,recallItems=[],recallMiss=new Set(),reinforceIds=[],reinforceRound=0,reinforceIndex=0,previewItems=[];
 function resumeSession(){alert("新版从首页开始学习，原有词书和进度已保留。");showPage("today")}
+
+let recallAnswers={};
 function startSession(){
  previewItems=state.items.filter(x=>x.status==="pending").slice(0,5);
  if(!previewItems.length)return alert("没有待学习新词，请查看21天复习区");
- $("previewList").innerHTML=previewItems.map((x,i)=>'<div class="card" style="margin-bottom:10px" onclick="speakText('+JSON.stringify(x.en).replace(/"/g,"&quot;")+')"><div class="small">第'+(i+1)+'个 · 点击发音 🔊</div><div class="en">'+esc(x.en)+'</div><div class="cn">'+esc(x.cn)+'</div></div>').join("");
+ $("previewList").innerHTML=previewItems.map(x=>'<div class="preview-row"><div class="preview-words"><div class="preview-en">'+esc(x.en)+'</div><div class="preview-cn">'+esc(x.cn)+'</div></div><button class="sound-btn" aria-label="播放英文" onclick="speakItemById('+JSON.stringify(x.id)+')">🔊</button></div>').join("");
  showPage("preview");
 }
+function speakItemById(id){const x=state.items.find(t=>t.id===id);if(x)speakText(x.en)}
 function beginGroupRecall(){
  addDailyIds(previewItems.map(x=>x.id));
  const items=getDailyIds().map(id=>state.items.find(x=>x.id===id)).filter(Boolean);
@@ -447,35 +450,48 @@ function beginRecall(items,mode){
  recallMode=mode;recallItems=[...items];recallRound=0;recallMiss=new Set();examIndex=0;examQueue=shuffle(recallItems);showPage("learn");loadExamItem();
 }
 function loadExamItem(){
- if(examIndex>=examQueue.length){
-  if(recallRound===0){recallRound=1;examIndex=0;examQueue=shuffle(recallItems);return loadExamItem()}
-  const missed=[...recallMiss].map(id=>state.items.find(x=>x.id===id)).filter(Boolean);
-  if(missed.length){
-   recallItems.filter(x=>!recallMiss.has(x.id)).forEach(x=>{if(recallMode==="review"||x.stage===0)advanceCycle(x)});
-   missed.forEach(resetCycle);save();
-   reinforceIds=missed.map(x=>x.id);reinforceRound=0;reinforceIndex=0;return beginReinforcement();
-  }
-  recallItems.forEach(x=>{if(recallMode==="review"||x.stage===0)advanceCycle(x)});
-  save();clearActiveSession();showPage(recallMode==="review"?"reviews":"done");return;
+ recallAnswers={};
+ $("studyView").style.display="none";$("examView").style.display="none";$("recallListView").style.display="block";
+ $("learnTitle").textContent=recallMode==="review"?"21天复习":"强化记忆 · "+recallItems.length+"词";
+ $("progressText").textContent=recallRound===0?"第一轮 · 看英文说中文":"第二轮 · 看中文说英文";
+ $("recallRoundHint").textContent="点击单词查看答案，再选 ✓ 或 ×；每个单词都要判断。";
+ renderRecallRows();
+}
+function renderRecallRows(){
+ const first=recallRound===0;
+ $("recallRows").innerHTML=examQueue.map((x,i)=>{
+  const a=recallAnswers[x.id]||{},cls=a.grade===true?"correct":a.grade===false?"wrong":"";
+  return '<div class="recall-row '+cls+'"><div class="recall-text" onclick="revealRecallRow('+i+')"><div>'+esc(first?x.en:x.cn)+'</div>'+(a.revealed?'<span class="recall-answer">'+esc(first?x.cn:x.en)+'</span>':'')+'</div><div class="recall-actions"><button class="judge no '+(a.grade===false?"selected":"")+'" onclick="gradeRecallRow('+i+',false)" aria-label="错误">×</button><button class="judge yes '+(a.grade===true?"selected":"")+'" onclick="gradeRecallRow('+i+',true)" aria-label="正确">✓</button></div></div>';
+ }).join("");
+ const grades=Object.values(recallAnswers).filter(a=>a.grade!==undefined),correct=grades.filter(a=>a.grade).length,wrong=grades.length-correct;
+ $("recallStats").textContent="✓ "+correct+"　× "+wrong+"　已完成 "+grades.length+"/"+examQueue.length;
+}
+function revealRecallRow(i){
+ const x=examQueue[i];if(!x)return;
+ const a=recallAnswers[x.id]||(recallAnswers[x.id]={});a.revealed=true;speakText(x.en);renderRecallRows();
+}
+function gradeRecallRow(i,pass){
+ const x=examQueue[i];if(!x)return;
+ const a=recallAnswers[x.id]||(recallAnswers[x.id]={});
+ a.revealed=true;a.grade=pass;
+ if(!pass)recallMiss.add(x.id);
+ speakText(x.en);renderRecallRows();
+}
+function submitRecallRound(){
+ if(examQueue.some(x=>!recallAnswers[x.id]||recallAnswers[x.id].grade===undefined))return alert("请先完成每个单词的对错判断");
+ if(recallRound===0){recallRound=1;examQueue=shuffle(recallItems);loadExamItem();window.scrollTo(0,0);return}
+ const missed=[...recallMiss].map(id=>state.items.find(x=>x.id===id)).filter(Boolean);
+ if(missed.length){
+  recallItems.filter(x=>!recallMiss.has(x.id)).forEach(x=>{if(recallMode==="review"||x.stage===0)advanceCycle(x)});
+  missed.forEach(resetCycle);save();
+  reinforceIds=missed.map(x=>x.id);reinforceRound=0;reinforceIndex=0;return beginReinforcement();
  }
- const x=examQueue[examIndex],first=recallRound===0;
- $("learnTitle").textContent=recallMode==="review"?"21天复习":"累计强化记忆 · "+recallItems.length+"词";
- $("progressText").textContent=(first?"第一轮 英文→中文":"第二轮 中文→英文")+" · "+(examIndex+1)+"/"+examQueue.length;
- $("examStep").textContent=first?"看英文说中文":"看中文说英文";
- $("examCn").textContent=first?x.en:x.cn;
- $("correctEn").textContent=first?x.cn:x.en;
- $("revealHint").textContent="自己回答后，点击上方显示正确答案，再判断对错。";
- $("studyView").style.display="none";$("examView").style.display="";
- $("examNotice").style.display="none";$("heardBox").style.display="none";
- $("answerReveal").style.display="none";$("judgeButtons").style.display="none";$("revealHint").style.display="block";
- $("speechStatus").textContent="先自己回忆，再点击查看答案。";
+ recallItems.forEach(x=>{if(recallMode==="review"||x.stage===0)advanceCycle(x)});
+ save();clearActiveSession();showPage(recallMode==="review"?"reviews":"done");
 }
-function revealAnswer(){
- $("answerReveal").style.display="block";$("judgeButtons").style.display="flex";$("revealHint").style.display="none";
- speakText(examQueue[examIndex].en);
-}
-function markPass(){if($("answerReveal").style.display==="none")return revealAnswer();examIndex++;loadExamItem()}
-function markFail(){if($("answerReveal").style.display==="none")return revealAnswer();recallMiss.add(examQueue[examIndex].id);examIndex++;loadExamItem()}
+function revealAnswer(){revealRecallRow(examIndex)}
+function markPass(){gradeRecallRow(examIndex,true)}
+function markFail(){gradeRecallRow(examIndex,false)}
 function continueAfterFail(){markFail()}
 function beginReinforcement(){
  if(reinforceRound>=5||!reinforceIds.length){
@@ -484,7 +500,7 @@ function beginReinforcement(){
   recallItems=items;recallMiss=new Set();recallRound=0;examIndex=0;examQueue=shuffle(items);return loadExamItem();
  }
  const x=state.items.find(t=>t.id===reinforceIds[reinforceIndex]);if(!x)return nextStudyItem();
- showPage("learn");$("studyView").style.display="";$("examView").style.display="none";
+ showPage("learn");$("studyView").style.display="";$("examView").style.display="none";$("recallListView").style.display="none";
  $("learnTitle").textContent="错词强化 · 第"+(reinforceRound+1)+"/5轮";
  $("progressText").textContent=(reinforceIndex+1)+"/"+reinforceIds.length;
  $("learnEn").textContent=x.en;$("learnCn").textContent=x.cn;
