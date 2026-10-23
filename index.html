@@ -20,9 +20,9 @@
 <div id="mainApp" class="app" style="display:none">
 <section id="today" class="page active"><div class="header"><h1>Speak It</h1><p>想得到，说得出。</p></div><div class="section"><div class="card"><div class="small">今天</div><div class="big" id="todayTotal">0</div><div class="grid"><div class="stat"><b id="dueCount">0</b><span>到期复习</span></div><div class="stat"><b id="pendingCount">0</b><span>待学习</span></div><div class="stat"><b id="groupCount">0</b><span>待学习组</span></div></div><button id="startBtn" class="primary" style="margin-top:16px" onclick="startSession()">开始学习</button>
 <button class="secondary" style="margin-top:10px;background:#e6f4ed" onclick="showPage('reviews')">📅 21天复习区</button><button id="yesterdayExamBtn" class="secondary" style="margin-top:10px;display:none;background:#FFF1B8" onclick="startYesterdayExam()">先完成昨日词汇考试</button>
-<button id="dailyExamBtn" class="secondary" style="margin-top:10px;display:none" onclick="startDailyExam()">今日总考试</button>
+<button id="dailyExamBtn" class="secondary" style="margin-top:10px;display:none" onclick="startDailyExam()">今日累计强化</button>
 <div id="resumeBox" class="small" style="display:none;text-align:center;margin-top:10px;padding:10px;border-radius:12px;background:#FFF8E2">检测到未完成的学习进度。<button class="secondary" style="margin-top:8px;padding:9px" onclick="resumeSession()">继续刚才那一组</button></div>
-<div class="small" style="text-align:center;margin-top:9px">先学完一组，再打乱考试；熟悉的词可点“熟”跳过后续重复，但仍会进入考试。</div></div></div><div class="section"><div class="row"><button class="secondary" onclick="showPage('add')">＋ 新增内容</button><button class="secondary" onclick="showPage('batch')">批量新增</button></div></div><div class="section"><div style="font-size:15px;font-weight:700;margin:3px 3px 9px">下一组</div><div id="nextGroup"></div></div></section>
+<div class="small" style="text-align:center;margin-top:9px">每组预览5词，直接双向强化；只有错词需要五轮巩固。</div></div></div><div class="section"><div class="row"><button class="secondary" onclick="showPage('add')">＋ 新增内容</button><button class="secondary" onclick="showPage('batch')">批量新增</button></div></div><div class="section"><div style="font-size:15px;font-weight:700;margin:3px 3px 9px">下一组</div><div id="nextGroup"></div></div></section>
 <section id="reviews" class="page"><div class="header"><h1>21天复习</h1><p>到期和逾期词汇按日期排列。</p></div><div class="section" id="reviewDates"></div></section><section id="preview" class="page"><div class="header"><h1>预览5个新词</h1><p>点击单词播放英文，准备好后进入强化记忆。</p></div><div class="section"><div id="previewList"></div><button class="primary" onclick="beginGroupRecall()">进入强化记忆 →</button></div></section><section id="add" class="page"><div class="header"><h1>新增</h1><p>自己输入英文和中文。</p></div><div class="section"><div class="card"><input id="enInput" placeholder="英文，例如：refund"><input id="cnInput" style="margin-top:10px" placeholder="中文，例如：退款"><button class="primary" style="margin-top:12px" onclick="addSingle()">加入待学习词书</button></div></div></section>
 <section id="batch" class="page"><div class="header"><h1>批量新增</h1><p>每行一条：英文=中文、英文-中文、英文 中文</p></div><div class="section"><div class="card"><textarea id="batchInput" rows="12" placeholder="refund = 退款
 get a refund = 获得退款
@@ -57,7 +57,7 @@ be ourselves around each other = 在彼此面前做自己"></textarea><button cl
   <div id="examNotice" class="notice"></div>
 </div>
 </div></div></section>
-<section id="done" class="page"><div class="header"><h1>完成</h1><p>这一组学习 + 打乱考试已结束。</p></div><div class="done"><div class="check">✓</div><h2>这一组完成了</h2><p>回到首页可以继续下一组；今天全部学完后，再做一次“今日总考试”。</p><button class="primary" onclick="showPage('today')">回到首页</button><button class="secondary" style="margin-top:10px" onclick="startDailyExam()">今日总考试</button></div></section>
+<section id="done" class="page"><div class="header"><h1>完成</h1><p>本轮双向强化记忆已完成。</p></div><div class="done"><div class="check">✓</div><h2>这一组完成了</h2><p>回到首页可以继续下一组；每学一组，自动累计强化今天学过的所有词。</p><button class="primary" onclick="showPage('today')">回到首页</button><button class="secondary" style="margin-top:10px" onclick="startDailyExam()">今日总考试</button></div></section>
 <div class="nav"><button class="active" data-page="today" onclick="showPage('today',this)"><strong>⌂</strong>今日</button><button data-page="add" onclick="showPage('add',this)"><strong>＋</strong>新增</button><button data-page="library" onclick="showPage('library',this)"><strong>☆</strong>词书</button><button data-page="me" onclick="showPage('me',this)"><strong>☺</strong>我的</button></div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -368,7 +368,7 @@ function renderAll(){
   $("pendingCount").textContent=pending.length;
   $("groupCount").textContent=Math.ceil(pending.length/5);
   $("dueCount").textContent=due.length;
-  $("todayTotal").textContent=due.length+Math.min(5,pending.length);
+  $("todayTotal").textContent=due.length;
   $("mPending").textContent=pending.length;
   $("mLearning").textContent=learning.length;
   $("mMastered").textContent=mastered.length;
@@ -376,7 +376,7 @@ function renderAll(){
   const db=$("dailyExamBtn");
   if(db){db.style.display="none";}
   const yb=$("yesterdayExamBtn"),sb=$("startBtn"),needY=false,yc=0;
-  if(yb){yb.style.display=needY?"block":"none";yb.textContent="先完成昨日词汇考试（"+yc+"）";}
+  if(yb)yb.style.display="none";
   if(sb)sb.textContent="学习下一组新词";
   const rb=$("resumeBox");
   if(rb)rb.style.display="none";
@@ -450,7 +450,11 @@ function loadExamItem(){
  if(examIndex>=examQueue.length){
   if(recallRound===0){recallRound=1;examIndex=0;examQueue=shuffle(recallItems);return loadExamItem()}
   const missed=[...recallMiss].map(id=>state.items.find(x=>x.id===id)).filter(Boolean);
-  if(missed.length){if(recallMode==="review"){missed.forEach(resetCycle);save()}reinforceIds=missed.map(x=>x.id);reinforceRound=0;reinforceIndex=0;return beginReinforcement()}
+  if(missed.length){
+   recallItems.filter(x=>!recallMiss.has(x.id)).forEach(x=>{if(recallMode==="review"||x.stage===0)advanceCycle(x)});
+   missed.forEach(resetCycle);save();
+   reinforceIds=missed.map(x=>x.id);reinforceRound=0;reinforceIndex=0;return beginReinforcement();
+  }
   recallItems.forEach(x=>{if(recallMode==="review"||x.stage===0)advanceCycle(x)});
   save();clearActiveSession();showPage(recallMode==="review"?"reviews":"done");return;
  }
