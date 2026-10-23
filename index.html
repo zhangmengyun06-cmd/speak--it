@@ -482,9 +482,8 @@ function submitRecallRound(){
  if(recallRound===0){recallRound=1;examQueue=shuffle(recallItems);loadExamItem();window.scrollTo(0,0);return}
  const missed=[...recallMiss].map(id=>state.items.find(x=>x.id===id)).filter(Boolean);
  if(missed.length){
-  recallItems.filter(x=>!recallMiss.has(x.id)).forEach(x=>{if(recallMode==="review"||x.stage===0)advanceCycle(x)});
-  missed.forEach(resetCycle);save();
-  reinforceIds=missed.map(x=>x.id);reinforceRound=0;reinforceIndex=0;return beginReinforcement();
+  reinforceIds=missed.map(x=>x.id);reinforceRound=0;reinforceIndex=0;
+  return beginReinforcement();
  }
  recallItems.forEach(x=>{if(recallMode==="review"||x.stage===0)advanceCycle(x)});
  save();clearActiveSession();showPage(recallMode==="review"?"reviews":"done");
@@ -497,7 +496,10 @@ function beginReinforcement(){
  if(reinforceRound>=5||!reinforceIds.length){
   const items=reinforceIds.map(id=>state.items.find(x=>x.id===id)).filter(Boolean);
   if(!items.length)return showPage("today");
-  recallItems=items;recallMiss=new Set();recallRound=0;examIndex=0;examQueue=shuffle(items);return loadExamItem();
+  // After five rounds on wrong words, retest ALL original words together.
+  // No word advances its review cycle until the entire batch passes both directions.
+  recallMiss=new Set();recallRound=0;examIndex=0;examQueue=shuffle(recallItems);
+  loadExamItem();window.scrollTo(0,0);return;
  }
  const x=state.items.find(t=>t.id===reinforceIds[reinforceIndex]);if(!x)return nextStudyItem();
  showPage("learn");$("studyView").style.display="";$("examView").style.display="none";$("recallListView").style.display="none";
