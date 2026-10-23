@@ -24,7 +24,7 @@
 <div id="resumeBox" class="small" style="display:none;text-align:center;margin-top:10px;padding:10px;border-radius:12px;background:#FFF8E2">检测到未完成的学习进度。<button class="secondary" style="margin-top:8px;padding:9px" onclick="resumeSession()">继续刚才那一组</button></div>
 <div class="small" style="text-align:center;margin-top:9px">先学完一组，再打乱考试；熟悉的词可点“熟”跳过后续重复，但仍会进入考试。</div></div></div><div class="section"><div class="row"><button class="secondary" onclick="showPage('add')">＋ 新增内容</button><button class="secondary" onclick="showPage('batch')">批量新增</button></div></div><div class="section"><div style="font-size:15px;font-weight:700;margin:3px 3px 9px">下一组</div><div id="nextGroup"></div></div></section>
 <section id="add" class="page"><div class="header"><h1>新增</h1><p>自己输入英文和中文。</p></div><div class="section"><div class="card"><input id="enInput" placeholder="英文，例如：refund"><input id="cnInput" style="margin-top:10px" placeholder="中文，例如：退款"><button class="primary" style="margin-top:12px" onclick="addSingle()">加入待学习词书</button></div></div></section>
-<section id="batch" class="page"><div class="header"><h1>批量新增</h1><p>每行一条：英文 = 中文</p></div><div class="section"><div class="card"><textarea id="batchInput" rows="12" placeholder="refund = 退款
+<section id="batch" class="page"><div class="header"><h1>批量新增</h1><p>每行一条：英文=中文、英文-中文、英文 中文</p></div><div class="section"><div class="card"><textarea id="batchInput" rows="12" placeholder="refund = 退款
 get a refund = 获得退款
 financial ties = 经济利益关系
 pick my son up from school = 去学校接儿子
@@ -405,12 +405,13 @@ function addBatch(){
   const lines=$("batchInput").value.split(/\n+/).map(x=>x.trim()).filter(Boolean);
   let added=0,skipped=0;
   for(const line of lines){
-    const p=line.split(/\s*(?:=|＝|—|–)\s*/);
-    if(p.length>=2&&p[0].trim()&&p.slice(1).join(" — ").trim()){
-      if(addItem(p[0].trim(),p.slice(1).join(" — ").trim()))added++;else skipped++;
+    // Support English=中文, English-中文, English 中文 and full-width punctuation.
+    const match=line.match(/^(.+?)\s*(?:[=＝：:]|[—–－]|\s+-\s*|-(?=[\u3400-\u9fff])|\s+(?=[\u3400-\u9fff]))\s*(.+)$/);
+    if(match&&match[1].trim()&&match[2].trim()){
+      if(addItem(match[1].trim(),match[2].trim()))added++;else skipped++;
     }
   }
-  if(!added)return alert("没有识别到可新增内容。格式示例：refund = 退款");
+  if(!added)return alert("没有识别到可新增内容。格式示例：refund = 退款、refund-退款、refund 退款");
   $("batchInput").value="";
   save();showPage("today");
   setTimeout(()=>alert("已新增 "+added+" 条"+(skipped?"，跳过重复 "+skipped+" 条":"")),80);
