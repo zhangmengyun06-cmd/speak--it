@@ -591,7 +591,10 @@ function finishRecallStage(){
   return startRecallStage(items,"cumulative");
  }
  recallItems.forEach(x=>{if(recallMode==="review"||x.stage===0)advanceCycle(x)});
- recordCheckin();save();clearActiveSession();showPage("done");
+ recordCheckin();save();
+ // Switch away first, then clear. Otherwise showPage() sees the learning screen
+ // and recreates the just-cleared session as an unfinished task.
+ showPage("done");clearActiveSession();
 }
 function loadExamItem(preserveAnswers=false){
  if(!preserveAnswers)recallAnswers={};
