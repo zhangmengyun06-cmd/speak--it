@@ -373,7 +373,20 @@ function renderResumeState(){
 function dateKey(offset=0){const d=new Date();d.setHours(12,0,0,0);d.setDate(d.getDate()+offset);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
 function todayKey(){return dateKey(0)}
 function dayDistance(from,to){return Math.round((new Date(to+"T12:00:00")-new Date(from+"T12:00:00"))/86400000)}
-function activityDays(){return [...new Set((state.checkinDays||[]).filter(k=>/^\\d{4}-\\d{2}-\\d{2}$/.test(k)))].sort()}
+function activityDays(){
+ const set=new Set((state.checkinDays||[]).filter(k=>/^\d{4}-\d{2}-\d{2}$/.test(k)));
+ for(let i=0;i<localStorage.length;i++){
+  const key=localStorage.key(i);
+  if(!key||!key.startsWith("speak_it_daily_"))continue;
+  const day=key.slice("speak_it_daily_".length);
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(day))continue;
+  try{
+   const ids=JSON.parse(localStorage.getItem(key)||"[]");
+   if(Array.isArray(ids)&&ids.length)set.add(day);
+  }catch(e){}
+ }
+ return [...set].sort();
+}
 function streakCount(){
  const days=activityDays();if(!days.length)return 0;
  const last=days[days.length-1],gap=dayDistance(last,todayKey());
@@ -390,7 +403,13 @@ function recordCheckin(){
 }
 function avatarMarkup(data){return data?'<img alt="头像" src="'+data+'" style="width:100%;height:100%;border-radius:50%;object-fit:cover">':"🙂"}
 function renderProfile(){
- const p=state.profile||{},n=streakCount(),done=activityDays().includes(todayKey());
+ const mergedDays=activityDays();
+ if(JSON.stringify(state.checkinDays||[])!==JSON.stringify(mergedDays)){
+  state.checkinDays=mergedDays;
+  localStorage.setItem("speak_it_simple_final",JSON.stringify(state));
+  scheduleCloudSave();
+ }
+ const p=state.profile||{},n=streakCount(),done=mergedDays.includes(todayKey());
  $("homeAvatar").innerHTML=avatarMarkup(p.avatar);
  $("editAvatar").innerHTML=avatarMarkup(p.avatar);
  $("homeNickname").textContent=p.nickname||"英语学习者";
@@ -426,7 +445,16 @@ async function updateAvatar(event){
 }
 function getDailyIdsFor(key){try{return JSON.parse(localStorage.getItem("speak_it_daily_"+key)||"[]")}catch(e){return []}}
 function getDailyIds(){return getDailyIdsFor(todayKey())}
-function addDailyIds(ids){const merged=[...new Set([...getDailyIds(),...ids])];localStorage.setItem("speak_it_daily_"+todayKey(),JSON.stringify(merged));scheduleCloudSave()}
+function addDailyIds(ids){
+ const merged=[...new Set([...getDailyIds(),...ids])];
+ localStorage.setItem("speak_it_daily_"+todayKey(),JSON.stringify(merged));
+ if(merged.length){
+  state.checkinDays=[...new Set([...(state.checkinDays||[]),todayKey()])].sort();
+  localStorage.setItem("speak_it_simple_final",JSON.stringify(state));
+ }
+ scheduleCloudSave();
+ renderProfile();
+}
 function yesterdayIds(){return getDailyIdsFor(dateKey(-1))}
 function yesterdayGateKey(){return "speak_it_yesterday_gate_"+todayKey()}
 function yesterdayGateDone(){return localStorage.getItem(yesterdayGateKey())==="1"}
