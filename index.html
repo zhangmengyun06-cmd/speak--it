@@ -21,7 +21,7 @@
 <section id="today" class="page active"><div class="header"><h1>Speak It</h1><p>想得到，说得出。</p><div class="profile-strip" onclick="showPage('me')"><div id="homeAvatar" class="profile-avatar">🙂</div><div style="flex:1;min-width:0"><div id="homeNickname" class="profile-name">英语学习者</div><div id="homeStreak" class="profile-sub">开始今天的学习吧</div><div id="homeWords" class="profile-sub">累计学习 0 词</div></div><span id="homeFlame" class="flame">🔥</span></div></div><div class="section"><div class="card"><div class="small">今天</div><div class="big" id="todayTotal">0</div><div class="grid"><div class="stat"><b id="dueCount">0</b><span>到期复习</span></div><div class="stat"><b id="pendingCount">0</b><span>待学习</span></div><div class="stat"><b id="groupCount">0</b><span>待学习组</span></div></div><button id="startBtn" class="primary" style="margin-top:16px" onclick="startSession()">开始学习</button>
 <button class="secondary" style="margin-top:10px;background:#e6f4ed" onclick="showPage('reviews')">📅 21天复习区</button><button id="yesterdayExamBtn" class="secondary" style="margin-top:10px;display:none;background:#FFF1B8" onclick="startYesterdayExam()">先完成昨日词汇考试</button>
 <button id="dailyExamBtn" class="secondary" style="margin-top:10px;display:none" onclick="startDailyExam()">今日累计强化</button>
-<div id="resumeBox" class="small" style="display:none;text-align:center;margin-top:10px;padding:10px;border-radius:12px;background:#FFF8E2">检测到未完成的学习进度。<button class="secondary" style="margin-top:8px;padding:9px" onclick="resumeSession()">继续刚才那一组</button></div>
+<div id="resumeBox" class="small" style="display:none;text-align:center;margin-top:10px;padding:10px;border-radius:12px;background:#FFF8E2">检测到未完成的学习/复习进度。<button class="secondary" style="margin-top:8px;padding:9px" onclick="resumeSession()">继续刚才的位置</button></div>
 <div class="small" style="text-align:center;margin-top:9px">每组预览5词，直接双向强化；只有错词需要五轮巩固。</div></div></div><div class="section"><div class="row"><button class="secondary" onclick="showPage('add')">＋ 新增内容</button><button class="secondary" onclick="showPage('batch')">批量新增</button></div></div><div class="section"><div style="font-size:15px;font-weight:700;margin:3px 3px 9px">下一组</div><div id="nextGroup"></div></div></section>
 <section id="reviews" class="page"><div class="header"><h1>21天复习</h1><p>到期和逾期词汇按日期排列。</p></div><div class="section" id="reviewDates"></div></section><section id="preview" class="page"><div class="header"><h1>预览5个新词</h1><p>点击单词播放英文，准备好后进入强化记忆。</p></div><div class="section"><div id="previewList" class="recall-list"></div><button class="primary" onclick="beginGroupRecall()">进入强化记忆 →</button></div></section><section id="add" class="page"><div class="header"><h1>新增</h1><p>自己输入英文和中文。</p></div><div class="section"><div class="card"><input id="enInput" placeholder="英文，例如：refund"><input id="cnInput" style="margin-top:10px" placeholder="中文，例如：退款"><button class="primary" style="margin-top:12px" onclick="addSingle()">加入待学习词书</button></div></div></section>
 <section id="batch" class="page"><div class="header"><h1>批量新增</h1><p>每行一条：英文=中文、英文-中文、英文 中文</p></div><div class="section"><div class="card"><textarea id="batchInput" rows="12" placeholder="refund = 退款
@@ -307,26 +307,68 @@ function mergeLegacyLocalData(){
   if(added)localStorage.setItem("speak_it_simple_final",JSON.stringify(state));
   return added;
 }
-function saveActiveSession(){
-  const data={queueIds:queue.map(x=>x.id),qi,studyRound,familiarIds:[...familiarIds],examMode,examIndex,examQueueIds:examQueue.map(x=>x.id)};
+function currentLearningStage(){
+  if($("preview")&&$("preview").classList.contains("active"))return"preview";
+  if($("learn")&&$("learn").classList.contains("active")){
+    if($("recallListView")&&$("recallListView").style.display!=="none")return"recall";
+    if($("studyView")&&$("studyView").style.display!=="none")return"reinforce";
+  }
+  return null;
+}
+function saveActiveSession(stage){
+  const st=stage||currentLearningStage();
+  if(!st)return;
+  const data={
+    version:2,stage:st,
+    previewIds:(previewItems||[]).map(x=>x.id),
+    recallMode,recallPhase,recallRound,
+    recallItemIds:(recallItems||[]).map(x=>x.id),
+    recallFullItemIds:(recallFullItems||[]).map(x=>x.id),
+    examQueueIds:(examQueue||[]).map(x=>x.id),
+    recallMissIds:[...(recallMiss||new Set())],
+    recallAnswers:recallAnswers||{},
+    recallReturnItemIds:(recallReturnItems||[]).map(x=>x.id),
+    recallReturnPhase,
+    reinforceIds:[...(reinforceIds||[])],
+    reinforceRound,reinforceIndex,
+    savedAt:Date.now()
+  };
   localStorage.setItem("speak_it_active_session",JSON.stringify(data));
   scheduleCloudSave();
+  renderResumeState();
 }
-function clearActiveSession(){localStorage.removeItem("speak_it_active_session");scheduleCloudSave()}
+function clearActiveSession(){localStorage.removeItem("speak_it_active_session");scheduleCloudSave();renderResumeState()}
+function hasActiveSession(){
+  try{const x=JSON.parse(localStorage.getItem("speak_it_active_session")||"null");return !!(x&&x.version===2&&x.stage)}catch(e){return false}
+}
 function recoverActiveSession(){
   try{
-    const s=JSON.parse(localStorage.getItem("speak_it_active_session")||"null");
-    if(!s||!Array.isArray(s.queueIds)||!s.queueIds.length)return false;
-    queue=s.queueIds.map(id=>state.items.find(x=>x.id===id)).filter(Boolean);
-    if(!queue.length)return false;
-    qi=Math.min(Number(s.qi)||0,queue.length);
-    studyRound=Math.max(1,Math.min(5,Number(s.studyRound)||1));
-    familiarIds=new Set(Array.isArray(s.familiarIds)?s.familiarIds:[]);
-    examMode=s.examMode||"group";
-    examIndex=Number(s.examIndex)||0;
-    examQueue=Array.isArray(s.examQueueIds)?s.examQueueIds.map(id=>state.items.find(x=>x.id===id)).filter(Boolean):[];
-    return true;
+    const x=JSON.parse(localStorage.getItem("speak_it_active_session")||"null");
+    if(!x||x.version!==2||!x.stage)return false;
+    const byIds=ids=>(ids||[]).map(id=>state.items.find(t=>t.id===id)).filter(Boolean);
+    previewItems=byIds(x.previewIds);
+    recallMode=x.recallMode||"new";recallPhase=x.recallPhase||"group";recallRound=Number(x.recallRound)||0;
+    recallItems=byIds(x.recallItemIds);recallFullItems=byIds(x.recallFullItemIds);
+    examQueue=byIds(x.examQueueIds);recallMiss=new Set(x.recallMissIds||[]);
+    recallAnswers=x.recallAnswers||{};recallReturnItems=byIds(x.recallReturnItemIds);
+    recallReturnPhase=x.recallReturnPhase||"group";reinforceIds=x.reinforceIds||[];
+    reinforceRound=Number(x.reinforceRound)||0;reinforceIndex=Number(x.reinforceIndex)||0;
+    if(x.stage==="preview"){
+      renderPreviewPage();showPage("preview");return true;
+    }
+    if(x.stage==="recall"&&recallItems.length){
+      showPage("learn");loadExamItem(true);return true;
+    }
+    if(x.stage==="reinforce"&&reinforceIds.length){
+      showPage("learn");beginReinforcement(true);return true;
+    }
+    return false;
   }catch(e){return false}
+}
+function renderResumeState(){
+  const active=hasActiveSession(),rb=$("resumeBox"),sb=$("startBtn");
+  if(rb)rb.style.display=active?"block":"none";
+  if(sb)sb.textContent=active?"继续刚才的学习":"学习下一组新词";
 }
 function dateKey(offset=0){const d=new Date();d.setHours(12,0,0,0);d.setDate(d.getDate()+offset);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
 function todayKey(){return dateKey(0)}
@@ -398,6 +440,8 @@ function save(){
   renderAll()
 }
 function showPage(id,btn){
+  const current=currentLearningStage();
+  if(current&&id!=="learn"&&id!=="preview")saveActiveSession(current);
   document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));
   $(id).classList.add("active");
   document.querySelectorAll(".nav button").forEach(x=>x.classList.remove("active"));
@@ -430,8 +474,7 @@ function renderAll(){
   const yb=$("yesterdayExamBtn"),sb=$("startBtn"),needY=false,yc=0;
   if(yb)yb.style.display="none";
   if(sb)sb.textContent="学习下一组新词";
-  const rb=$("resumeBox");
-  if(rb)rb.style.display="none";
+  renderResumeState();
   renderNextGroup();renderLibrary();renderReviewDates();renderProfile();
 }
 function renderNextGroup(){
@@ -480,15 +523,18 @@ function addItem(en,cn){
 }
 
 let recallMode="new",recallRound=0,recallItems=[],recallMiss=new Set(),reinforceIds=[],reinforceRound=0,reinforceIndex=0,previewItems=[];
-function resumeSession(){alert("新版从首页开始学习，原有词书和进度已保留。");showPage("today")}
+function resumeSession(){if(!recoverActiveSession()){clearActiveSession();alert("没有可恢复的学习进度");showPage("today")}}
 
 let recallAnswers={};
 let recallPhase="group",recallFullItems=[],recallReturnItems=[],recallReturnPhase="group";
+function renderPreviewPage(){
+ $("previewList").innerHTML=previewItems.map(x=>'<div class="preview-row" onclick="speakItemById('+JSON.stringify(x.id)+')" role="button" tabindex="0"><div class="preview-words"><div class="preview-en">'+esc(x.en)+'</div><div class="preview-cn">'+esc(x.cn)+'</div></div><button class="sound-btn" aria-label="播放英文" onclick="event.stopPropagation();speakItemById('+JSON.stringify(x.id)+')">🔊</button></div>').join("");
+}
 function startSession(){
+ if(hasActiveSession())return resumeSession();
  previewItems=state.items.filter(x=>x.status==="pending").slice(0,5);
  if(!previewItems.length)return alert("没有待学习新词，请查看21天复习区");
- $("previewList").innerHTML=previewItems.map(x=>'<div class="preview-row" onclick="speakItemById('+JSON.stringify(x.id)+')" role="button" tabindex="0"><div class="preview-words"><div class="preview-en">'+esc(x.en)+'</div><div class="preview-cn">'+esc(x.cn)+'</div></div><button class="sound-btn" aria-label="播放英文" onclick="event.stopPropagation();speakItemById('+JSON.stringify(x.id)+')">🔊</button></div>').join("");
- showPage("preview");
+ renderPreviewPage();showPage("preview");saveActiveSession("preview");
 }
 function speakItemById(id){const x=state.items.find(t=>t.id===id);if(x)speakText(x.en)}
 function beginGroupRecall(){
@@ -502,11 +548,11 @@ function beginRecall(items,mode,phase){
  if(!items.length)return;
  recallMode=mode;recallPhase=phase||(mode==="review"?"review":"group");
  recallItems=[...items];recallFullItems=[...items];recallRound=0;recallMiss=new Set();examIndex=0;
- examQueue=shuffle(recallItems);showPage("learn");loadExamItem();
+ examQueue=shuffle(recallItems);showPage("learn");loadExamItem();saveActiveSession("recall");
 }
 function startRecallStage(items,phase){
  recallPhase=phase;recallItems=[...items];recallRound=0;recallMiss=new Set();
- examIndex=0;examQueue=shuffle(recallItems);showPage("learn");loadExamItem();window.scrollTo(0,0);
+ examIndex=0;examQueue=shuffle(recallItems);showPage("learn");loadExamItem();window.scrollTo(0,0);saveActiveSession("recall");
 }
 function finishRecallStage(){
  if(recallPhase==="repair"){
@@ -519,8 +565,8 @@ function finishRecallStage(){
  recallItems.forEach(x=>{if(recallMode==="review"||x.stage===0)advanceCycle(x)});
  recordCheckin();save();clearActiveSession();showPage("done");
 }
-function loadExamItem(){
- recallAnswers={};
+function loadExamItem(preserveAnswers=false){
+ if(!preserveAnswers)recallAnswers={};
  $("studyView").style.display="none";$("examView").style.display="none";$("recallListView").style.display="block";
  $("learnTitle").textContent=recallPhase==="repair"?"错词复测 · "+recallItems.length+"词":recallMode==="review"?"21天复习":recallPhase==="group"?"本组强化 · "+recallItems.length+"词":"今日累计强化 · "+recallItems.length+"词";
  $("progressText").textContent=recallRound===0?"第一轮 · 看英文说中文":"第二轮 · 看中文说英文";
@@ -538,18 +584,18 @@ function renderRecallRows(){
 }
 function revealRecallRow(i){
  const x=examQueue[i];if(!x)return;
- const a=recallAnswers[x.id]||(recallAnswers[x.id]={});a.revealed=true;speakText(x.en);renderRecallRows();
+ const a=recallAnswers[x.id]||(recallAnswers[x.id]={});a.revealed=true;speakText(x.en);renderRecallRows();saveActiveSession("recall");
 }
 function gradeRecallRow(i,pass){
  const x=examQueue[i];if(!x)return;
  const a=recallAnswers[x.id]||(recallAnswers[x.id]={});
  a.revealed=true;a.grade=pass;
  if(!pass)recallMiss.add(x.id);
- speakText(x.en);renderRecallRows();
+ speakText(x.en);renderRecallRows();saveActiveSession("recall");
 }
 function submitRecallRound(){
  if(examQueue.some(x=>!recallAnswers[x.id]||recallAnswers[x.id].grade===undefined))return alert("请先完成每个单词的对错判断");
- if(recallRound===0){recallRound=1;examQueue=shuffle(recallItems);loadExamItem();window.scrollTo(0,0);return}
+ if(recallRound===0){recallRound=1;examQueue=shuffle(recallItems);loadExamItem();window.scrollTo(0,0);saveActiveSession("recall");return}
  const missed=[...recallMiss].map(id=>state.items.find(x=>x.id===id)).filter(Boolean);
  if(missed.length){
   if(recallPhase!=="repair"){recallReturnItems=[...recallItems];recallReturnPhase=recallPhase}
@@ -562,7 +608,7 @@ function revealAnswer(){revealRecallRow(examIndex)}
 function markPass(){gradeRecallRow(examIndex,true)}
 function markFail(){gradeRecallRow(examIndex,false)}
 function continueAfterFail(){markFail()}
-function beginReinforcement(){
+function beginReinforcement(restoring=false){
  if(reinforceRound>=5||!reinforceIds.length){
   const items=reinforceIds.map(id=>state.items.find(x=>x.id===id)).filter(Boolean);
   if(!items.length)return showPage("today");
@@ -576,7 +622,8 @@ function beginReinforcement(){
  $("learnEn").textContent=x.en;$("learnCn").textContent=x.cn;
  $("learnEn").style.visibility=reinforceRound>=2?"hidden":"visible";
  $("learnEn").onclick=()=>{$("learnEn").style.visibility="visible";speakText(x.en)};
- if(reinforceRound<2)speakText(x.en);
+ if(reinforceRound<2&&!restoring)speakText(x.en);
+ saveActiveSession("reinforce");
 }
 function nextStudyItem(){reinforceIndex++;if(reinforceIndex>=reinforceIds.length){reinforceRound++;reinforceIndex=0;reinforceIds=shuffle(reinforceIds)}beginReinforcement()}
 function markFamiliar(){const id=reinforceIds[reinforceIndex];reinforceIds=reinforceIds.filter(x=>x!==id);if(reinforceIndex>=reinforceIds.length)reinforceIndex=0;beginReinforcement()}
