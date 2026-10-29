@@ -330,6 +330,7 @@ function saveActiveSession(stage){
     recallReturnItemIds:(recallReturnItems||[]).map(x=>x.id),
     recallReturnPhase,
     reinforceIds:[...(reinforceIds||[])],
+    reinforceTestIds:[...(reinforceTestIds||[])],
     reinforceRound,reinforceIndex,
     savedAt:Date.now()
   };
@@ -352,6 +353,7 @@ function recoverActiveSession(){
     examQueue=byIds(x.examQueueIds);recallMiss=new Set(x.recallMissIds||[]);
     recallAnswers=x.recallAnswers||{};recallReturnItems=byIds(x.recallReturnItemIds);
     recallReturnPhase=x.recallReturnPhase||"group";reinforceIds=x.reinforceIds||[];
+    reinforceTestIds=x.reinforceTestIds||x.reinforceIds||[];
     reinforceRound=Number(x.reinforceRound)||0;reinforceIndex=Number(x.reinforceIndex)||0;
     if(x.stage==="preview"){
       renderPreviewPage();showPage("preview");return true;
@@ -550,7 +552,7 @@ function addItem(en,cn){
   state.items.push(makeItem(en,cn));return true;
 }
 
-let recallMode="new",recallRound=0,recallItems=[],recallMiss=new Set(),reinforceIds=[],reinforceRound=0,reinforceIndex=0,previewItems=[];
+let recallMode="new",recallRound=0,recallItems=[],recallMiss=new Set(),reinforceIds=[],reinforceTestIds=[],reinforceRound=0,reinforceIndex=0,previewItems=[];
 function resumeSession(){if(!recoverActiveSession()){clearActiveSession();alert("没有可恢复的学习进度");showPage("today")}}
 
 let recallAnswers={};
@@ -630,7 +632,7 @@ function submitRecallRound(){
  const missed=[...recallMiss].map(id=>state.items.find(x=>x.id===id)).filter(Boolean);
  if(missed.length){
   if(recallPhase!=="repair"){recallReturnItems=[...recallItems];recallReturnPhase=recallPhase}
-  reinforceIds=missed.map(x=>x.id);reinforceRound=0;reinforceIndex=0;
+  reinforceIds=missed.map(x=>x.id);reinforceTestIds=[...reinforceIds];reinforceRound=0;reinforceIndex=0;
   return beginReinforcement();
  }
  return finishRecallStage();
@@ -641,9 +643,13 @@ function markFail(){gradeRecallRow(examIndex,false)}
 function continueAfterFail(){markFail()}
 function beginReinforcement(restoring=false){
  if(reinforceRound>=5||!reinforceIds.length){
-  const items=reinforceIds.map(id=>state.items.find(x=>x.id===id)).filter(Boolean);
-  if(!items.length)return showPage("today");
-  // Test only the reinforced wrong words first. Once all pass, return to the original group/cumulative round.
+  const items=(reinforceTestIds||[]).map(id=>state.items.find(x=>x.id===id)).filter(Boolean);
+  if(!items.length){
+   // Defensive fallback: do not throw the learner back to the homepage mid-session.
+   return recallReturnItems.length?startRecallStage(recallReturnItems,recallReturnPhase):showPage("today");
+  }
+  // "熟" only skips the remaining five-round repetitions.
+  // The original wrong words still need their own two-way re-test.
   return startRecallStage(items,"repair");
  }
  const x=state.items.find(t=>t.id===reinforceIds[reinforceIndex]);if(!x)return nextStudyItem();
@@ -657,7 +663,15 @@ function beginReinforcement(restoring=false){
  saveActiveSession("reinforce");
 }
 function nextStudyItem(){reinforceIndex++;if(reinforceIndex>=reinforceIds.length){reinforceRound++;reinforceIndex=0;reinforceIds=shuffle(reinforceIds)}beginReinforcement()}
-function markFamiliar(){const id=reinforceIds[reinforceIndex];reinforceIds=reinforceIds.filter(x=>x!==id);if(reinforceIndex>=reinforceIds.length)reinforceIndex=0;beginReinforcement()}
+function markFamiliar(){
+ const id=reinforceIds[reinforceIndex];
+ if(id===undefined)return beginReinforcement();
+ // Remove only from the remaining repetition queue, never from reinforceTestIds.
+ reinforceIds=reinforceIds.filter(x=>x!==id);
+ if(reinforceIndex>=reinforceIds.length)reinforceIndex=0;
+ saveActiveSession("reinforce");
+ beginReinforcement();
+}
 function startGroupExam(){beginGroupRecall()}
 function loadStudyItem(){beginReinforcement()}
 function speakCorrectAnswer(){if(examQueue[examIndex])speakText(examQueue[examIndex].en)}
