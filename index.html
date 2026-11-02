@@ -23,7 +23,7 @@
 <button id="dailyExamBtn" class="secondary" style="margin-top:10px;display:none" onclick="startDailyExam()">今日累计强化</button>
 <div id="resumeBox" class="small" style="display:none;text-align:center;margin-top:10px;padding:10px;border-radius:12px;background:#FFF8E2">检测到未完成的学习/复习进度。<button class="secondary" style="margin-top:8px;padding:9px" onclick="resumeSession()">继续刚才的位置</button></div>
 <div class="small" style="text-align:center;margin-top:9px">每组预览5词，直接双向强化；只有错词需要五轮巩固。</div></div></div><div class="section"><div class="row"><button class="secondary" onclick="showPage('add')">＋ 新增内容</button><button class="secondary" onclick="showPage('batch')">批量新增</button></div></div><div class="section"><div style="font-size:15px;font-weight:700;margin:3px 3px 9px">下一组</div><div id="nextGroup"></div></div></section>
-<section id="reviews" class="page"><div class="header"><h1>21天复习</h1><p>到期和逾期词汇按日期排列。</p></div><div class="section" id="reviewDates"></div></section><section id="preview" class="page"><div class="header"><h1>预览5个新词</h1><p>点击单词播放英文，准备好后进入强化记忆。</p></div><div class="section"><div id="previewList" class="recall-list"></div><button class="primary" onclick="beginGroupRecall()">进入强化记忆 →</button></div></section><section id="add" class="page"><div class="header"><h1>新增</h1><p>自己输入英文和中文。</p></div><div class="section"><div class="card"><input id="enInput" placeholder="英文，例如：refund"><input id="cnInput" style="margin-top:10px" placeholder="中文，例如：退款"><button class="primary" style="margin-top:12px" onclick="addSingle()">加入待学习词书</button></div></div></section>
+<section id="reviews" class="page"><div class="header"><h1>21天复习</h1><p>学习后第1、3、7、14、21天复习；逾期任务会保留。</p></div><div class="section" id="reviewDates"></div></section><section id="preview" class="page"><div class="header"><h1>预览5个新词</h1><p>点击单词播放英文，准备好后进入强化记忆。</p></div><div class="section"><div id="previewList" class="recall-list"></div><button class="primary" onclick="beginGroupRecall()">进入强化记忆 →</button></div></section><section id="add" class="page"><div class="header"><h1>新增</h1><p>自己输入英文和中文。</p></div><div class="section"><div class="card"><input id="enInput" placeholder="英文，例如：refund"><input id="cnInput" style="margin-top:10px" placeholder="中文，例如：退款"><button class="primary" style="margin-top:12px" onclick="addSingle()">加入待学习词书</button></div></div></section>
 <section id="batch" class="page"><div class="header"><h1>批量新增</h1><p>每行一条：英文=中文、英文-中文、英文 中文</p></div><div class="section"><div class="card"><textarea id="batchInput" rows="12" placeholder="refund = 退款
 get a refund = 获得退款
 financial ties = 经济利益关系
@@ -65,7 +65,8 @@ const SUPABASE_URL="https://zyyqwzcpxgbkqxuqxrzu.supabase.co";
 const SUPABASE_KEY="sb_publishable_njPcKgser6N1qmHWR_9S5A_yMZnbFeC";
 const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 let currentUser=null,authMode="login",cloudTimer=null,cloudReady=false;
-const REVIEW_DELAYS=[1,3,7,14,21];
+const REVIEW_DAYS=[1,3,7,14,21];
+const REVIEW_INTERVALS=[1,2,4,7,7];
 const SEED_PAIRS=[
 ["high-speed train","高铁"],
 ["prepare sth. for sb.","为某人准备某物"],
@@ -252,6 +253,7 @@ async function enterApp(user){
     await loadCloudOrMigrate();
     const recoveredCount=mergeLegacyLocalData();
     if(recoveredCount>0)await saveCloudNow();
+    migrateReviewSchedule();
     renderAll();
   }catch(e){
     console.error(e);
@@ -479,12 +481,37 @@ function showPage(id,btn){
   if(n)n.classList.add("active");
   window.scrollTo(0,0);
 }
-function isDue(x){return x.status!=="pending"&&x.stage>0&&x.next_review_at&&new Date(x.next_review_at).getTime()<=Date.now()}
+function localDateOnly(v){
+ const d=new Date(v);d.setHours(0,0,0,0);return d.getTime();
+}
+function isDue(x){
+ if(x.status==="pending"||x.stage<=0||!x.next_review_at)return false;
+ const today=new Date();today.setHours(0,0,0,0);
+ return localDateOnly(x.next_review_at)<=today.getTime();
+}
 function renderReviewDates(){
  const groups={};state.items.filter(isDue).forEach(x=>{const k=new Date(x.next_review_at).toLocaleDateString("zh-CN");(groups[k]??=[]).push(x)});
  const keys=Object.keys(groups).sort((a,b)=>new Date(groups[a][0].next_review_at)-new Date(groups[b][0].next_review_at));
  window.reviewGroups=keys.map(k=>groups[k]);
  $("reviewDates").innerHTML=keys.length?keys.map((k,i)=>'<div class="card" style="margin-bottom:12px"><h3>'+esc(k)+'</h3><p class="small">待复习 '+groups[k].length+' 个</p><button class="primary" onclick="beginRecall(window.reviewGroups['+i+'],\'review\')">双向强化记忆</button></div>').join(""):'<div class="card">今天没有待复习的词汇 🎉</div>';
+}
+function migrateReviewSchedule(){
+ if(state.review_schedule_version===2)return;
+ const now=new Date();now.setHours(0,0,0,0);
+ state.items.forEach(x=>{
+  if(x.status==="pending"||!x.next_review_at||x.stage<=0||x.stage>=6)return;
+  const due=new Date(x.next_review_at);due.setHours(0,0,0,0);
+  if(due<=now)return;
+  // Only stage 2+ was affected by the previous interval interpretation.
+  if(x.stage>=2){
+   const target=new Date();target.setHours(0,0,0,0);
+   target.setDate(target.getDate()+(REVIEW_INTERVALS[x.stage-1]||1));
+   if(target<due)x.next_review_at=target.toISOString();
+  }
+ });
+ state.review_schedule_version=2;
+ localStorage.setItem("speak_it_simple_final",JSON.stringify(state));
+ scheduleCloudSave();
 }
 function renderAll(){
   const pending=state.items.filter(x=>x.status==="pending");
@@ -700,15 +727,16 @@ function startRecognition(){
 }
 function currentExamReal(){const x=examQueue[examIndex];return state.items.find(i=>i.id===x.id)}
 function advanceCycle(x){
-  if(x.status==="pending")x.status="learning";
-  if(x.stage>=5){x.stage=6;x.status="mastered";x.next_review_at=null}
-  else{x.stage+=1;const delay=REVIEW_DELAYS[x.stage-1]||1;x.next_review_at=new Date(Date.now()+delay*86400000).toISOString()}
+ if(x.status==="pending")x.status="learning";
+ if(x.stage>=5){x.stage=6;x.status="mastered";x.next_review_at=null;return}
+ x.stage+=1;
+ const d=new Date();d.setHours(0,0,0,0);
+ d.setDate(d.getDate()+(REVIEW_INTERVALS[x.stage-1]||1));
+ x.next_review_at=d.toISOString();
 }
 function resetCycle(x){
-  x.status="learning";x.stage=0;x.reset=(x.reset||0)+1;x.next_review_at=null;
+ x.status="pending";x.stage=0;x.reset=(x.reset||0)+1;x.next_review_at=null;
 }
-function advanceCycle(x){if(x.status==="pending")x.status="learning";if(x.stage>=5){x.stage=6;x.status="mastered";x.next_review_at=null}else{x.stage++;const d=new Date();d.setHours(9,0,0,0);d.setDate(d.getDate()+(REVIEW_DELAYS[x.stage-1]||1));x.next_review_at=d.toISOString()}}
-function resetCycle(x){x.status="pending";x.stage=0;x.reset=(x.reset||0)+1;x.next_review_at=null}
 function esc(s){return String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
 if("serviceWorker"in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}))}
 initAuth();
