@@ -30,7 +30,12 @@ financial ties = 经济利益关系
 pick my son up from school = 去学校接儿子
 be ourselves around each other = 在彼此面前做自己"></textarea><button class="primary" style="margin-top:12px" onclick="addBatch()">批量加入</button></div></div></section>
 <section id="library" class="page"><div class="header"><h1>词书</h1><p>待学习、学习中、已掌握。</p></div><div class="section"><div class="tabs"><button class="chip active" onclick="setFilter('pending',this)">待学习</button><button class="chip" onclick="setFilter('learning',this)">学习中</button><button class="chip" onclick="setFilter('mastered',this)">已掌握</button></div><div id="libraryList"></div></div></section>
-<section id="me" class="page"><div class="header"><h1>我的</h1><p>设置你的昵称、头像和学习记录。</p></div><div class="section"><div class="card"><div id="editAvatar" class="profile-form-avatar">🙂</div><input id="avatarUpload" type="file" accept="image/*" style="display:none" onchange="updateAvatar(event)"><button class="secondary" onclick="$('avatarUpload').click()" style="margin-bottom:12px">更换头像</button><div class="small" style="margin-bottom:7px">昵称</div><input id="nicknameInput" maxlength="24" placeholder="给自己起个昵称"><button class="primary" style="margin-top:12px" onclick="saveProfile()">保存个人资料</button><div id="meStreak" class="streak-pill">🔥 连续学习 0 天</div><div class="grid"><div class="stat"><b id="mPending">0</b><span>待学习</span></div><div class="stat"><b id="mLearning">0</b><span>学习中</span></div><div class="stat"><b id="mMastered">0</b><span>已掌握</span></div></div><div class="account-row"><div><div class="small">当前账号</div><div id="accountEmail" class="account-email"></div></div><button class="secondary" style="width:auto;padding:10px 14px" onclick="logout()">退出</button></div></div></div></section>
+<section id="me" class="page"><div class="header"><h1>我的</h1><p>设置你的昵称、头像和学习记录。</p></div><div class="section"><div class="card"><div id="editAvatar" class="profile-form-avatar">🙂</div><input id="avatarUpload" type="file" accept="image/*" style="display:none" onchange="updateAvatar(event)"><button class="secondary" onclick="$('avatarUpload').click()" style="margin-bottom:12px">更换头像</button><div class="small" style="margin-bottom:7px">昵称</div><input id="nicknameInput" maxlength="24" placeholder="给自己起个昵称"><button class="primary" style="margin-top:12px" onclick="saveProfile()">保存个人资料</button><div id="meStreak" class="streak-pill">🔥 连续学习 0 天</div><div class="grid"><div class="stat"><b id="mPending">0</b><span>待学习</span></div><div class="stat"><b id="mLearning">0</b><span>学习中</span></div><div class="stat"><b id="mMastered">0</b><span>已掌握</span></div></div><div class="account-row"><div><div class="small">当前账号</div><div id="accountEmail" class="account-email"></div></div><button class="secondary" style="width:auto;padding:10px 14px" onclick="logout()">退出</button></div>
+<div id="accountRepairBox" style="margin-top:18px;padding-top:16px;border-top:1px solid var(--line);display:none">
+  <div style="font-weight:700;margin-bottom:6px">账号词书修复</div>
+  <div id="accountRepairText" class="small" style="line-height:1.6"></div>
+  <button id="accountRepairBtn" class="secondary" style="margin-top:10px" onclick="runAccountRepairStep()"></button>
+</div></div></div></section>
 <section id="learn" class="page"><div class="header"><h1 id="learnTitle">学习</h1><p id="progressText">1 / 5</p></div><div class="section"><div class="learn-card">
 <div id="recallListView" style="display:none"><div id="recallRoundHint" class="recall-header"></div><div id="recallRows" class="recall-list"></div><div class="recall-footer"><span id="recallStats" class="small" style="flex:1"></span><button class="primary" onclick="submitRecallRound()">完成本轮 →</button></div></div><div id="studyView">
   <div class="step">STEP 1 · 先学完这一组</div>
@@ -449,6 +454,69 @@ function renderProfile(){
  $("homeFlame").classList.toggle("lit",done);
  $("meStreak").textContent="🔥 连续学习 "+n+" 天"+(done?" · 今日已点亮":" · 今天待点亮");
  if(document.activeElement!==$("nicknameInput"))$("nicknameInput").value=p.nickname||"";
+ renderAccountRepair();
+}
+
+const REPAIR_A="447157924@qq.com";
+const REPAIR_B="691387306@qq.com";
+const REPAIR_KEY="speak_it_repair_source_447";
+function renderAccountRepair(){
+ const box=$("accountRepairBox"),txt=$("accountRepairText"),btn=$("accountRepairBtn");
+ if(!box||!currentUser){if(box)box.style.display="none";return}
+ const email=(currentUser.email||"").toLowerCase();
+ if(email!==REPAIR_A&&email!==REPAIR_B){box.style.display="none";return}
+ box.style.display="block";
+ let snap=null;try{snap=JSON.parse(localStorage.getItem(REPAIR_KEY)||"null")}catch(e){}
+ if(email===REPAIR_A){
+   txt.textContent="先记录这个账号当前词书的唯一ID。不会删除或修改任何单词。";
+   btn.textContent="记录 447157924 词书";
+ }else{
+   if(!snap||!Array.isArray(snap.ids)||!snap.ids.length){
+     txt.textContent="请先登录 447157924@qq.com，在“我的”里记录它的词书，再回来修复这个账号。";
+     btn.textContent="尚未记录447账号";
+   }else{
+     const idset=new Set(snap.ids);
+     const matches=state.items.filter(x=>idset.has(String(x.id)));
+     txt.textContent="已找到 "+matches.length+" 个与447账号完全相同ID的词。只会移除这些明确属于447账号的重复词，不按英文名称猜测。";
+     btn.textContent=matches.length?"从691账号移除这 "+matches.length+" 个重复词":"没有检测到可安全移除的重复词";
+   }
+ }
+}
+function runAccountRepairStep(){
+ if(!currentUser)return;
+ const email=(currentUser.email||"").toLowerCase();
+ if(email===REPAIR_A){
+   const ids=state.items.map(x=>String(x.id));
+   localStorage.setItem(REPAIR_KEY,JSON.stringify({email:REPAIR_A,ids,count:ids.length,savedAt:Date.now()}));
+   renderAccountRepair();
+   alert("已记录447账号的 "+ids.length+" 个词。现在退出，登录 691387306@qq.com 再继续修复。");
+   return;
+ }
+ if(email===REPAIR_B){
+   let snap=null;try{snap=JSON.parse(localStorage.getItem(REPAIR_KEY)||"null")}catch(e){}
+   if(!snap||!Array.isArray(snap.ids)||!snap.ids.length)return alert("请先登录447账号记录词书");
+   const idset=new Set(snap.ids);
+   const matches=state.items.filter(x=>idset.has(String(x.id)));
+   if(!matches.length)return alert("没有检测到可安全移除的重复词");
+   if(!confirm("将从691账号移除 "+matches.length+" 个与447账号ID完全一致的词。447账号不会受影响。确认继续？"))return;
+   const removeIds=new Set(matches.map(x=>String(x.id)));
+   state.items=state.items.filter(x=>!removeIds.has(String(x.id)));
+   // Clean volatile daily/session refs that point to removed items.
+   for(let i=localStorage.length-1;i>=0;i--){
+     const k=localStorage.key(i);
+     if(!k)continue;
+     if(k.startsWith("speak_it_daily_")){
+       try{
+         const arr=JSON.parse(localStorage.getItem(k)||"[]");
+         if(Array.isArray(arr))localStorage.setItem(k,JSON.stringify(arr.filter(id=>!removeIds.has(String(id)))));
+       }catch(e){}
+     }
+   }
+   clearActiveSession();
+   save();
+   renderAccountRepair();
+   alert("修复完成：已从691账号移除 "+matches.length+" 个属于447账号的重复词。");
+ }
 }
 function saveProfile(){
  state.profile=state.profile||{};
