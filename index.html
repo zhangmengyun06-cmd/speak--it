@@ -279,6 +279,7 @@ async function enterApp(user){
   $("authGate").style.display="none";
   $("mainApp").style.display="block";
   $("accountEmail").textContent=user.email||"";
+  if(user.email)localStorage.setItem("speak_it_email_uid_"+user.email.toLowerCase(),user.id);
   try{
     await loadCloudOrMigrate();
     migrateReviewSchedule();
@@ -460,62 +461,109 @@ function renderProfile(){
 const REPAIR_A="447157924@qq.com";
 const REPAIR_B="691387306@qq.com";
 const REPAIR_KEY="speak_it_repair_source_447";
+
+function normWordPair(x){
+ return (String(x.en||"").trim().toLowerCase()+"\u241f"+String(x.cn||"").trim()).replace(/\s+/g," ");
+}
+function findOtherUserCaches(){
+ const out=[];
+ const myKey=userCacheKey();
+ for(let i=0;i<localStorage.length;i++){
+  const k=localStorage.key(i);
+  if(!k||!k.startsWith("speak_it_user_state_")||k===myKey)continue;
+  try{
+   const v=JSON.parse(localStorage.getItem(k)||"null");
+   if(v&&Array.isArray(v.items)&&v.items.length)out.push({key:k,state:v});
+  }catch(e){}
+ }
+ return out;
+}
+function get447Snapshot(){
+ let snap=null;
+ try{snap=JSON.parse(localStorage.getItem(REPAIR_KEY)||"null")}catch(e){}
+ if(snap&&Array.isArray(snap.pairs)&&snap.pairs.length)return snap;
+ // Fallback: on the same browser, if there is only one other account cache,
+ // treat it as the other account and use exact EN+CN pairs for repair.
+ const others=findOtherUserCaches();
+ if(others.length===1){
+  return {
+   email:REPAIR_A,
+   pairs:others[0].state.items.map(normWordPair),
+   ids:others[0].state.items.map(x=>String(x.id)),
+   count:others[0].state.items.length,
+   inferred:true
+  };
+ }
+ return snap;
+}
 function renderAccountRepair(){
  const box=$("accountRepairBox"),txt=$("accountRepairText"),btn=$("accountRepairBtn");
  if(!box||!currentUser){if(box)box.style.display="none";return}
  const email=(currentUser.email||"").toLowerCase();
  if(email!==REPAIR_A&&email!==REPAIR_B){box.style.display="none";return}
  box.style.display="block";
- let snap=null;try{snap=JSON.parse(localStorage.getItem(REPAIR_KEY)||"null")}catch(e){}
  if(email===REPAIR_A){
-   txt.textContent="先记录这个账号当前词书的唯一ID。不会删除或修改任何单词。";
+   txt.textContent="记录447账号完整词书，用于清理691账号里误混入的内容。不会删除447账号任何资料。";
    btn.textContent="记录 447157924 词书";
- }else{
-   if(!snap||!Array.isArray(snap.ids)||!snap.ids.length){
-     txt.textContent="请先登录 447157924@qq.com，在“我的”里记录它的词书，再回来修复这个账号。";
-     btn.textContent="尚未记录447账号";
-   }else{
-     const idset=new Set(snap.ids);
-     const matches=state.items.filter(x=>idset.has(String(x.id)));
-     txt.textContent="已找到 "+matches.length+" 个与447账号完全相同ID的词。只会移除这些明确属于447账号的重复词，不按英文名称猜测。";
-     btn.textContent=matches.length?"从691账号移除这 "+matches.length+" 个重复词":"没有检测到可安全移除的重复词";
-   }
+   return;
  }
+ const snap=get447Snapshot();
+ if(!snap||!Array.isArray(snap.pairs)||!snap.pairs.length){
+   txt.textContent="还没有447账号的完整词书记录。请先登录447157924@qq.com，在这里点一次“记录词书”。";
+   btn.textContent="需要先记录447账号";
+   return;
+ }
+ const pairset=new Set(snap.pairs);
+ const matches=state.items.filter(x=>pairset.has(normWordPair(x)));
+ txt.textContent="检测到691账号里有 "+matches.length+" 个词与447账号完全相同（英文+中文一致）。可一次性清理，并会先保留本地备份。";
+ btn.textContent=matches.length?"清除447混入资料（"+matches.length+"个）":"没有检测到447混入资料";
 }
 function runAccountRepairStep(){
  if(!currentUser)return;
  const email=(currentUser.email||"").toLowerCase();
+
  if(email===REPAIR_A){
-   const ids=state.items.map(x=>String(x.id));
-   localStorage.setItem(REPAIR_KEY,JSON.stringify({email:REPAIR_A,ids,count:ids.length,savedAt:Date.now()}));
+   const snap={
+    email:REPAIR_A,
+    ids:state.items.map(x=>String(x.id)),
+    pairs:state.items.map(normWordPair),
+    count:state.items.length,
+    savedAt:Date.now()
+   };
+   localStorage.setItem(REPAIR_KEY,JSON.stringify(snap));
    renderAccountRepair();
-   alert("已记录447账号的 "+ids.length+" 个词。现在退出，登录 691387306@qq.com 再继续修复。");
+   alert("已记录447账号的 "+snap.count+" 个词。现在切换到691387306@qq.com，系统就能清理混入资料。");
    return;
  }
+
  if(email===REPAIR_B){
-   let snap=null;try{snap=JSON.parse(localStorage.getItem(REPAIR_KEY)||"null")}catch(e){}
-   if(!snap||!Array.isArray(snap.ids)||!snap.ids.length)return alert("请先登录447账号记录词书");
-   const idset=new Set(snap.ids);
-   const matches=state.items.filter(x=>idset.has(String(x.id)));
-   if(!matches.length)return alert("没有检测到可安全移除的重复词");
-   if(!confirm("将从691账号移除 "+matches.length+" 个与447账号ID完全一致的词。447账号不会受影响。确认继续？"))return;
+   const snap=get447Snapshot();
+   if(!snap||!Array.isArray(snap.pairs)||!snap.pairs.length)return alert("请先记录447账号词书");
+   const pairset=new Set(snap.pairs);
+   const matches=state.items.filter(x=>pairset.has(normWordPair(x)));
+   if(!matches.length)return alert("没有检测到447账号混入的词");
+
+   if(!confirm("将从691账号删除 "+matches.length+" 个与447账号英文+中文完全一致的词。会先自动备份当前691词书。确认删除？"))return;
+
+   localStorage.setItem("speak_it_691_before_cleanup_"+Date.now(),JSON.stringify(state));
    const removeIds=new Set(matches.map(x=>String(x.id)));
    state.items=state.items.filter(x=>!removeIds.has(String(x.id)));
-   // Clean volatile daily/session refs that point to removed items.
+
    for(let i=localStorage.length-1;i>=0;i--){
      const k=localStorage.key(i);
      if(!k)continue;
      if(k.startsWith("speak_it_daily_")){
        try{
-         const arr=JSON.parse(localStorage.getItem(k)||"[]");
-         if(Array.isArray(arr))localStorage.setItem(k,JSON.stringify(arr.filter(id=>!removeIds.has(String(id)))));
+        const arr=JSON.parse(localStorage.getItem(k)||"[]");
+        if(Array.isArray(arr))localStorage.setItem(k,JSON.stringify(arr.filter(id=>!removeIds.has(String(id)))));
        }catch(e){}
      }
    }
    clearActiveSession();
    save();
+   saveCloudNow();
    renderAccountRepair();
-   alert("修复完成：已从691账号移除 "+matches.length+" 个属于447账号的重复词。");
+   alert("已从691账号清除 "+matches.length+" 个447账号混入词。447账号资料没有改动。");
  }
 }
 function saveProfile(){
