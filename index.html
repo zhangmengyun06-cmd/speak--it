@@ -33,7 +33,9 @@ be ourselves around each other = 在彼此面前做自己"></textarea><button cl
 <section id="me" class="page"><div class="header"><h1>我的</h1><p>设置你的昵称、头像和学习记录。</p></div><div class="section"><div class="card"><div id="editAvatar" class="profile-form-avatar">🙂</div><input id="avatarUpload" type="file" accept="image/*" style="display:none" onchange="updateAvatar(event)"><button class="secondary" onclick="$('avatarUpload').click()" style="margin-bottom:12px">更换头像</button><div class="small" style="margin-bottom:7px">昵称</div><input id="nicknameInput" maxlength="24" placeholder="给自己起个昵称"><button class="primary" style="margin-top:12px" onclick="saveProfile()">保存个人资料</button><div id="meStreak" class="streak-pill">🔥 连续学习 0 天</div><div class="grid"><div class="stat"><b id="mPending">0</b><span>待学习</span></div><div class="stat"><b id="mLearning">0</b><span>学习中</span></div><div class="stat"><b id="mMastered">0</b><span>已掌握</span></div></div><div class="account-row"><div><div class="small">当前账号</div><div id="accountEmail" class="account-email"></div></div><button class="secondary" style="width:auto;padding:10px 14px" onclick="logout()">退出</button></div>
 <div id="accountRepairBox" style="margin-top:18px;padding-top:16px;border-top:1px solid var(--line);display:none">
   <div style="font-weight:700;margin-bottom:6px">账号词书修复</div>
-  <div id="accountRepairText" class="small" style="line-height:1.6"></div>
+  <div id="accountRepairText" class="small" style="line-height:1.6"></div><div id="accountWipeBox" style="margin-top:14px;display:none">
+  <button class="secondary" style="border-color:#f1c7c7;color:#b33" onclick="wipe691Account()">清空691账号全部学习资料</button>
+</div>
   <button id="accountRepairBtn" class="secondary" style="margin-top:10px" onclick="runAccountRepairStep()"></button>
 </div></div></div></section>
 <section id="learn" class="page"><div class="header"><h1 id="learnTitle">学习</h1><p id="progressText">1 / 5</p></div><div class="section"><div class="learn-card">
@@ -510,8 +512,9 @@ function renderAccountRepair(){
  const box=$("accountRepairBox"),txt=$("accountRepairText"),btn=$("accountRepairBtn");
  if(!box||!currentUser){if(box)box.style.display="none";return}
  const email=(currentUser.email||"").toLowerCase();
- if(email!==REPAIR_A&&email!==REPAIR_B){box.style.display="none";return}
+ if(email!==REPAIR_A&&email!==REPAIR_B){box.style.display="none";if($("accountWipeBox"))$("accountWipeBox").style.display="none";return}
  box.style.display="block";
+ if($("accountWipeBox"))$("accountWipeBox").style.display=email===REPAIR_B?"block":"none";
 
  if(email===REPAIR_B){
    let oldSnap=null;
@@ -572,6 +575,32 @@ async function runAccountRepairStep(){
    alert("已记录447账号的 "+snap.count+" 个词。");
  }
 }
+async function wipe691Account(){
+ if(!currentUser||String(currentUser.email||"").toLowerCase()!==REPAIR_B)return;
+ if(!confirm("这会清空 691387306@qq.com 的全部单词、学习进度、复习进度、打卡记录、昵称头像和未完成任务。447账号不会受影响。确定继续？"))return;
+ if(!confirm("最后确认：真的要把691账号恢复成一个全新的空账号吗？"))return;
+
+ // Keep a local emergency backup before wiping.
+ try{localStorage.setItem("speak_it_691_full_backup_before_wipe_"+Date.now(),JSON.stringify(state))}catch(e){}
+
+ clearGenericUserMeta();
+ state={items:[],profile:{},checkinDays:[],review_schedule_version:2};
+ localStorage.setItem("speak_it_simple_final",JSON.stringify(state));
+ localStorage.setItem("speak_it_backup_latest",JSON.stringify(state));
+ saveUserCache();
+ clearActiveSession();
+ renderAll();
+
+ const {error}=await supabaseClient.from("speak_it_user_data").upsert({
+  user_id:currentUser.id,
+  data:cloudSnapshot(),
+  updated_at:new Date().toISOString()
+ },{onConflict:"user_id"});
+ if(error){console.error(error);alert("本机已清空，但云端同步失败，请不要切换设备，刷新后再试。");return}
+ alert("691账号已清空。现在是一个全新的空账号。");
+ showPage("today");
+}
+
 function saveProfile(){
  state.profile=state.profile||{};
  state.profile.nickname=$("nicknameInput").value.trim().slice(0,24);
