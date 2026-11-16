@@ -156,7 +156,7 @@ const SEED_PAIRS=[
 ];
 
 const $=id=>document.getElementById(id);
-function makeItem(en,cn){return {id:Date.now()+Math.random(),en,cn,status:"pending",stage:0,reset:0,next_review_at:null,owner_user_id:currentUser?currentUser.id:null}}
+function makeItem(en,cn){return {id:Date.now()+Math.random(),en,cn,status:"pending",stage:0,reset:0,next_review_at:null,review_due_date:null,first_studied_on:null,owner_user_id:currentUser?currentUser.id:null}}
 let state;
 try{state=JSON.parse(localStorage.getItem("speak_it_simple_final")||"null")}catch(e){state=null}
 if(!state||!Array.isArray(state.items)) state={items:[]};
@@ -660,36 +660,47 @@ function showPage(id,btn){
   if(n)n.classList.add("active");
   window.scrollTo(0,0);
 }
-function localDateOnly(v){
- const d=new Date(v);d.setHours(0,0,0,0);return d.getTime();
-}
 function isDue(x){
- if(x.status==="pending"||x.stage<=0||!x.next_review_at)return false;
- const today=new Date();today.setHours(0,0,0,0);
- return localDateOnly(x.next_review_at)<=today.getTime();
+ if(x.status==="pending"||x.stage<=0)return false;
+ const due=x.review_due_date||null;
+ if(due)return due<=todayKey();
+ if(!x.next_review_at)return false;
+ const d=new Date(x.next_review_at);
+ const legacy=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+ return legacy<=todayKey();
+}
+function reviewDateLabel(key){
+ const p=String(key||"").split("-");
+ return p.length===3?(Number(p[1])+"月"+Number(p[2])+"日"):key;
 }
 function renderReviewDates(){
- const groups={};state.items.filter(isDue).forEach(x=>{const k=new Date(x.next_review_at).toLocaleDateString("zh-CN");(groups[k]??=[]).push(x)});
- const keys=Object.keys(groups).sort((a,b)=>new Date(groups[a][0].next_review_at)-new Date(groups[b][0].next_review_at));
+ const groups={};
+ state.items.filter(isDue).forEach(x=>{
+   let k=x.review_due_date;
+   if(!k&&x.next_review_at){
+     const d=new Date(x.next_review_at);
+     k=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+   }
+   if(k)(groups[k]??=[]).push(x);
+ });
+ const keys=Object.keys(groups).sort();
  window.reviewGroups=keys.map(k=>groups[k]);
- $("reviewDates").innerHTML=keys.length?keys.map((k,i)=>'<div class="card" style="margin-bottom:12px"><h3>'+esc(k)+'</h3><p class="small">待复习 '+groups[k].length+' 个</p><button class="primary" onclick="beginRecall(window.reviewGroups['+i+'],\'review\')">双向强化记忆</button></div>').join(""):'<div class="card">今天没有待复习的词汇 🎉</div>';
+ $("reviewDates").innerHTML=keys.length?keys.map((k,i)=>'<div class="card" style="margin-bottom:12px"><h3>'+esc(reviewDateLabel(k))+'</h3><p class="small">待复习 '+groups[k].length+' 个</p><button class="primary" onclick="beginRecall(window.reviewGroups['+i+'],\'review\')">双向强化记忆</button></div>').join(""):'<div class="card">今天没有待复习的词汇 🎉</div>';
 }
 function migrateReviewSchedule(){
- if(state.review_schedule_version===2)return;
- const now=new Date();now.setHours(0,0,0,0);
+ if(state.review_schedule_version===3)return;
  state.items.forEach(x=>{
-  if(x.status==="pending"||!x.next_review_at||x.stage<=0||x.stage>=6)return;
-  const due=new Date(x.next_review_at);due.setHours(0,0,0,0);
-  if(due<=now)return;
-  // Only stage 2+ was affected by the previous interval interpretation.
-  if(x.stage>=2){
-   const target=new Date();target.setHours(0,0,0,0);
-   target.setDate(target.getDate()+(REVIEW_INTERVALS[x.stage-1]||1));
-   if(target<due)x.next_review_at=target.toISOString();
-  }
+   if(x.status==="pending"||x.stage<=0||x.stage>=6)return;
+   if(!x.review_due_date&&x.next_review_at){
+     const d=new Date(x.next_review_at);
+     x.review_due_date=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+   }
+   // If stage 1 has no reliable date, it must never skip the next-day review.
+   if(x.stage===1&&!x.review_due_date)x.review_due_date=todayKey();
  });
- state.review_schedule_version=2;
+ state.review_schedule_version=3;
  localStorage.setItem("speak_it_simple_final",JSON.stringify(state));
+ saveUserCache();
  scheduleCloudSave();
 }
 function renderAll(){
@@ -907,14 +918,29 @@ function startRecognition(){
 function currentExamReal(){const x=examQueue[examIndex];return state.items.find(i=>i.id===x.id)}
 function advanceCycle(x){
  if(x.status==="pending")x.status="learning";
- if(x.stage>=5){x.stage=6;x.status="mastered";x.next_review_at=null;return}
+
+ if(!x.first_studied_on){
+   // The first successful completion is the learning day.
+   x.first_studied_on=todayKey();
+ }
+
+ if(x.stage>=5){
+   x.stage=6;x.status="mastered";x.next_review_at=null;x.review_due_date=null;return;
+ }
+
  x.stage+=1;
- const d=new Date();d.setHours(0,0,0,0);
- d.setDate(d.getDate()+(REVIEW_INTERVALS[x.stage-1]||1));
- x.next_review_at=d.toISOString();
+
+ // stage 1=>day1, stage 2=>day3, stage 3=>day7, stage 4=>day14, stage 5=>day21.
+ const learned=new Date(x.first_studied_on+"T12:00:00");
+ learned.setDate(learned.getDate()+(REVIEW_DAYS[x.stage-1]||1));
+ x.review_due_date=learned.getFullYear()+"-"+String(learned.getMonth()+1).padStart(2,"0")+"-"+String(learned.getDate()).padStart(2,"0");
+
+ // Keep legacy field for backwards compatibility, but calendar date above is authoritative.
+ const legacy=new Date(x.review_due_date+"T12:00:00");
+ x.next_review_at=legacy.toISOString();
 }
 function resetCycle(x){
- x.status="pending";x.stage=0;x.reset=(x.reset||0)+1;x.next_review_at=null;
+ x.status="pending";x.stage=0;x.reset=(x.reset||0)+1;x.next_review_at=null;x.review_due_date=null;x.first_studied_on=null;
 }
 function esc(s){return String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
 if("serviceWorker"in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}))}
