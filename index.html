@@ -294,7 +294,9 @@ async function enterApp(user){
   if(user.email)localStorage.setItem("speak_it_email_uid_"+user.email.toLowerCase(),user.id);
   try{
     await loadCloudOrMigrate();
+    const repairedPending=repairLearnedWordsStuckInPending();
     migrateReviewSchedule();
+    if(repairedPending)await saveCloudNow();
     renderAll();
   }catch(e){
     console.error(e);
@@ -687,6 +689,53 @@ function renderReviewDates(){
  window.reviewGroups=keys.map(k=>groups[k]);
  $("reviewDates").innerHTML=keys.length?keys.map((k,i)=>'<div class="card" style="margin-bottom:12px"><h3>'+esc(reviewDateLabel(k))+'</h3><p class="small">待复习 '+groups[k].length+' 个</p><button class="primary" onclick="beginRecall(window.reviewGroups['+i+'],\'review\')">双向强化记忆</button></div>').join(""):'<div class="card">今天没有待复习的词汇 🎉</div>';
 }
+function repairLearnedWordsStuckInPending(){
+ const learnedDatesById=new Map();
+ for(let i=0;i<localStorage.length;i++){
+   const k=localStorage.key(i);
+   if(!k||!k.startsWith("speak_it_daily_"))continue;
+   const day=k.slice("speak_it_daily_".length);
+   if(!/^\d{4}-\d{2}-\d{2}$/.test(day))continue;
+   try{
+     const ids=JSON.parse(localStorage.getItem(k)||"[]");
+     if(!Array.isArray(ids))continue;
+     ids.forEach(id=>{
+       const key=String(id);
+       const old=learnedDatesById.get(key);
+       if(!old||day<old)learnedDatesById.set(key,day);
+     });
+   }catch(e){}
+ }
+
+ let fixed=0;
+ state.items.forEach(x=>{
+   if(x.status!=="pending")return;
+   const learnedOn=learnedDatesById.get(String(x.id));
+   if(!learnedOn)return;
+
+   // A word that appears in a completed daily learning record is not a new word.
+   // Restore it to the review track instead of showing it under 待学习.
+   x.status="learning";
+   x.stage=Math.max(1,Number(x.stage)||0);
+   x.first_studied_on=x.first_studied_on||learnedOn;
+
+   const learned=new Date(x.first_studied_on+"T12:00:00");
+   const checkpoint=REVIEW_DAYS[Math.min(x.stage-1,REVIEW_DAYS.length-1)]||1;
+   learned.setDate(learned.getDate()+checkpoint);
+   const due=learned.getFullYear()+"-"+String(learned.getMonth()+1).padStart(2,"0")+"-"+String(learned.getDate()).padStart(2,"0");
+   x.review_due_date=x.review_due_date||due;
+   x.next_review_at=x.next_review_at||new Date(x.review_due_date+"T12:00:00").toISOString();
+   fixed++;
+ });
+
+ if(fixed){
+   localStorage.setItem("speak_it_simple_final",JSON.stringify(state));
+   saveUserCache();
+   scheduleCloudSave();
+ }
+ return fixed;
+}
+
 function migrateReviewSchedule(){
  if(state.review_schedule_version===4)return;
 
@@ -973,7 +1022,12 @@ function advanceCycle(x){
  x.next_review_at=legacy.toISOString();
 }
 function resetCycle(x){
- x.status="pending";x.stage=0;x.reset=(x.reset||0)+1;x.next_review_at=null;x.review_due_date=null;x.first_studied_on=null;
+ x.status="learning";
+ x.stage=0;
+ x.reset=(x.reset||0)+1;
+ x.next_review_at=null;
+ x.review_due_date=null;
+ x.first_studied_on=todayKey();
 }
 function esc(s){return String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
 if("serviceWorker"in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}))}
